@@ -34,7 +34,7 @@ class Dataset():
         self.num_devices = 0 # number of devices in the well at hand, set super high to start it will get smaller later
         self.voltages = [] # list of the voltages we sweep over
         for conc in range(self.num_concs): # calcluate the voltages list, number of voltages, and number of devices
-            raw_data = np.loadtxt('data/'+filenames[conc])[:, [0, 1, 2, 3, 5]].T # [:, [0, 1, 2, 4]] # ONLY HERE BECAUSE WE WANT TO IGNORE FET 3
+            raw_data = np.loadtxt('data/'+filenames[conc]).T # [:, [0, 1, 2, 3, 5]].T # [:, [0, 1, 2, 4]] # ONLY HERE BECAUSE WE WANT TO IGNORE FET 3
             if len(raw_data[0,:]) > len(self.voltages): 
                 self.voltages = raw_data[0,:] # gets the biggest list of voltages to sweep over (some stop at 1.5V and others at 1.4V, we want 1.5)
             self.num_devices = raw_data.shape[0] - 1
@@ -44,10 +44,11 @@ class Dataset():
         self.id_resistances = {} # dictionary of lists of initial dirac resistances. {device_number: resistance_list}
         self.linker_resistances = {}
         for dev_num in range(self.num_devices):
-            raw_data_apt = np.loadtxt('data/'+apt_filename)[:, [0, 1, 2, 3, 5]].T  # ONLY HERE BECAUSE WE WANT TO IGNORE FET 4
-            raw_data_id = np.loadtxt('data/'+id_filename)[:, [0, 1, 2, 3, 5]].T  # ONLY HERE BECAUSE WE WANT TO IGNORE FET 4
-            raw_data_linker = np.loadtxt('data/'+linker_filename)[:, [0, 1, 2, 3, 5]].T  # ONLY HERE BECAUSE WE WANT TO IGNORE FET 4
+            raw_data_apt = np.loadtxt('data/'+apt_filename).T # [:, [0, 1, 2, 3, 5]].T  # ONLY HERE BECAUSE WE WANT TO IGNORE FET 4
+            raw_data_id = np.loadtxt('data/'+id_filename).T # [:, [0, 1, 2, 3, 5]].T  # ONLY HERE BECAUSE WE WANT TO IGNORE FET 4
+            raw_data_linker = np.loadtxt('data/'+linker_filename).T # [:, [0, 1, 2, 3, 5]].T  # ONLY HERE BECAUSE WE WANT TO IGNORE FET 4
             self.apt_resistances[dev_num] = raw_data_apt[dev_num+1]
+            # print(dev_num+1)
             self.id_resistances[dev_num] = raw_data_id[dev_num+1]
             self.id_voltages = raw_data_id[0]
             self.linker_resistances[dev_num] = raw_data_linker[dev_num+1]
@@ -57,7 +58,7 @@ class Dataset():
         for conc in range(self.num_concs):
             conc_data_dic = {}
             for dev_num in range(self.num_devices):
-                raw_data = np.loadtxt('data/'+filenames[conc])[:, [0, 1, 2, 3, 5]].T # [:, [0, 1, 2, 4]] # ONLY HERE BECAUSE WE WANT TO IGNORE FET 3
+                raw_data = np.loadtxt('data/'+filenames[conc]).T # [:, [0, 1, 2, 3, 5]].T # [:, [0, 1, 2, 4]] # ONLY HERE BECAUSE WE WANT TO IGNORE FET 3
                 conc_data_dic[dev_num] = raw_data[dev_num+1]
             self.resistances[conc] = conc_data_dic
 
@@ -332,7 +333,7 @@ def inflection_point_hill_function(A, K, n, b):
     The inflection point of the hill curve
     Returns the inflection point, given coefficients
     '''
-    return K* ((n-1)/(n+1))**(1/n)
+    return max(0, K* ((n-1)/(n+1))**(1/n))
 
 def format_with_e(x, pos):
     '''
