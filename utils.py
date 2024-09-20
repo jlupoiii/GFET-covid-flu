@@ -1,12 +1,16 @@
+# Can also do "from utils_new import *" to get this class and other imports
+
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
 import math
 import random
+
+import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter, FuncFormatter
+from scipy.optimize import curve_fit
+from sklearn.metrics import r2_score
 
 class Dataset():
-    def __init__(self, filenames, apt_filename, id_filename):
+    def __init__(self, filenames, apt_filename, id_filename, linker_filename):
         '''
         This Dataset class serves to process data for GFET data, for a single data well, including
         multiple devices per well, over the gate voltage sweeps for multiple concentrations.
@@ -22,7 +26,7 @@ class Dataset():
             All other columns: Drain-Source Resistance for a single device. Each row shows the resistance
             experienced by each device for the gate voltage of the 1st column.
 
-        This assumes that all of the aptamer data along with ALL concentrations share the same gate voltage steps.
+        This assumes that all of the aptamer and linker data along with ALL concentrations share the same gate voltage steps.
         The initial dirac voltage does not have to have the same gate voltage steps.
         '''
         # initialize raw data and the data's basic features
@@ -38,12 +42,16 @@ class Dataset():
         # builds resistance info
         self.apt_resistances = {} # dictionary of lists of aptemer resistances. {device_number: resistance_list}
         self.id_resistances = {} # dictionary of lists of initial dirac resistances. {device_number: resistance_list}
+        self.linker_resistances = {}
         for dev_num in range(self.num_devices):
             raw_data_apt = np.loadtxt('data/'+apt_filename)[:, [0, 1, 2, 3, 5]].T  # ONLY HERE BECAUSE WE WANT TO IGNORE FET 4
             raw_data_id = np.loadtxt('data/'+id_filename)[:, [0, 1, 2, 3, 5]].T  # ONLY HERE BECAUSE WE WANT TO IGNORE FET 4
+            raw_data_linker = np.loadtxt('data/'+linker_filename)[:, [0, 1, 2, 3, 5]].T  # ONLY HERE BECAUSE WE WANT TO IGNORE FET 4
             self.apt_resistances[dev_num] = raw_data_apt[dev_num+1]
             self.id_resistances[dev_num] = raw_data_id[dev_num+1]
             self.id_voltages = raw_data_id[0]
+            self.linker_resistances[dev_num] = raw_data_linker[dev_num+1]
+            # self.id_voltages = raw_data_id[0]
             
         self.resistances = {}  # dictionary of dictionary of resistance list. {concentration_num: {device_number: list_of_resistances}}
         for conc in range(self.num_concs):
@@ -62,16 +70,21 @@ class Dataset():
             self.resistance_derivatives[conc] = conc_resistance_derivative
         self.apt_resistance_derivatives = {} # dictionary of lists of aptemer delta resistance. {device_number: list_of_resistance_changes}
         self.id_resistance_derivatives = {} # dictionary that has the same structure as apt_resistance_derivatives, but for initial dirac sweep
+        self.linker_resistance_derivatives = {}
         for dev_num in range(self.num_devices): 
             self.apt_resistance_derivatives[dev_num] = [self.apt_resistances[dev_num][i] - self.apt_resistances[dev_num][i+1] for i in range(len(self.apt_resistances[dev_num])-1)]
             self.id_resistance_derivatives[dev_num] = [self.id_resistances[dev_num][i] - self.id_resistances[dev_num][i+1] for i in range(len(self.id_resistances[dev_num])-1)]
+            self.linker_resistance_derivatives[dev_num] = [self.linker_resistances[dev_num][i] - self.linker_resistances[dev_num][i+1] for i in range(len(self.linker_resistances[dev_num])-1)]
 
+        
         # builds dirac voltage info
         self.apt_dirac_voltages = {} # dictionary of lists for dirac voltages for the aptemer. The list enumerates the concentrations. {device_number: dirac_voltage_list}
         self.id_dirac_voltages = {} # dictionary that has the same structure as apt_dirac_voltages, but for initial dirac sweep
+        self.linker_dirac_voltages = {}
         for dev_num in range(self.num_devices):
             self.apt_dirac_voltages[dev_num] = self.voltages[np.argmax(self.apt_resistances[dev_num])]
             self.id_dirac_voltages[dev_num] = self.id_voltages[np.argmax(self.id_resistances[dev_num])]
+            self.linker_dirac_voltages[dev_num] = self.voltages[np.argmax(self.linker_resistances[dev_num])]
         self.dirac_voltages = np.zeros((self.num_concs, self.num_devices)) # 2D array of dirac voltages. x:concentration, y: device_number
         self.adj_dirac_voltages = np.zeros((self.num_concs, self.num_devices)) # 2D array of dirac voltage shifts (adjusted). x:concentration, y: device_number
         for conc in range(self.num_concs):
@@ -99,6 +112,7 @@ class Dataset():
         # builds info about conductances
         self.apt_conductances = {dev_num: 1/self.apt_resistances[dev_num] for dev_num in range(self.num_devices)} # dictionary of lists of conductances for the aptamer readings. {device_number: conductance_list}
         self.id_conductances = {dev_num: 1/self.id_resistances[dev_num] for dev_num in range(self.num_devices)} # dictionary that has the same structure as apt_conductances, but for initial dirac sweep
+        self.linker_conductances = {dev_num: 1/self.linker_resistances[dev_num] for dev_num in range(self.num_devices)}
         self.conductances = {} # dictionary of dictionaries of lists for conductance readings. {concentration: {device_number: conductance_list}}
         for conc in range(self.num_concs):
             self.conductances[conc] = [1 / self.resistances[conc][dev_num] for dev_num in range(self.num_devices)]
@@ -112,16 +126,13 @@ class Dataset():
             self.conductance_derivatives[conc] = conc_conductance_derivative
         self.apt_conductance_derivatives = {} # dictionary of lists of aptemer delta conductance. {device_number: list_of_conductance_changes}
         self.id_conductance_derivatives = {} # dictionary that has the same structure as apt_conductance_derivatives, but for initial dirac sweep
+        self.linker_conductance_derivatives = {}
         for dev_num in range(self.num_devices): 
             self.apt_conductance_derivatives[dev_num] = [self.apt_conductances[dev_num][i] - self.apt_conductances[dev_num][i+1] for i in range(len(self.apt_conductances[dev_num])-1)]
             self.id_conductance_derivatives[dev_num] = [self.id_conductances[dev_num][i] - self.id_conductances[dev_num][i+1] for i in range(len(self.id_conductances[dev_num])-1)]
+            self.linker_conductance_derivatives[dev_num] = [self.linker_conductances[dev_num][i] - self.linker_conductances[dev_num][i+1] for i in range(len(self.linker_conductances[dev_num])-1)]
 
-        # builds info about normalized dirac voltages
-        self.norm_dirac_voltages = np.zeros((self.num_concs, self.num_devices)) # 2D array of normalized dirac voltages. x:concentration, y:device_number
-        for dev_num in range(self.num_devices):
-            self.norm_dirac_voltages[:,dev_num] = (self.adj_dirac_voltages[:,dev_num] - self.apt_dirac_voltages[dev_num]) / self.apt_dirac_voltages[dev_num]
-
-    
+        
     def conductance_shifts(self, voltage_to_track):
         '''
         Calculates the conductance shift over different concentrations, for a static gate voltage.
@@ -147,6 +158,14 @@ class Dataset():
         return delta_conductance
 
     
+    def normalize_2D_array(self, delta_Y, Y_0):
+        Y_norm = np.zeros((self.num_concs, self.num_devices))
+        for dev_num in range(self.num_devices):
+            # G_norm[:,dev_num] = (G_0[dev_num] - delta_G[:,dev_num]) / G_0[dev_num]
+            Y_norm[:,dev_num] = (delta_Y[:,dev_num] - Y_0[dev_num]) / Y_0[dev_num] + 1
+        return Y_norm
+
+    
     def normalized_conductance_shifts(self, voltage_to_track):
         '''
         Calculates the normalized conductance shift over different concentrations, for a specific gate voltage.
@@ -169,13 +188,14 @@ class Dataset():
         for dev_num in range(self.num_devices):
             G_0[dev_num] = self.apt_conductances[dev_num][voltage_idx]
 
-        # builds G_norm array
-        G_norm = np.zeros((self.num_concs, self.num_devices))
-        for dev_num in range(self.num_devices):
-            # G_norm[:,dev_num] = (G_0[dev_num] - delta_G[:,dev_num]) / G_0[dev_num]
-            G_norm[:,dev_num] = (delta_G[:,dev_num] - G_0[dev_num]) / G_0[dev_num]
+        # # builds G_norm array
+        # G_norm = np.zeros((self.num_concs, self.num_devices))
+        # for dev_num in range(self.num_devices):
+        #     # G_norm[:,dev_num] = (G_0[dev_num] - delta_G[:,dev_num]) / G_0[dev_num]
+        #     G_norm[:,dev_num] = (delta_G[:,dev_num] - G_0[dev_num]) / G_0[dev_num]
 
-        return G_norm
+        # return G_norm
+        return self.normalize_2D_array(delta_G, G_0)
 
     def analysis(self, data_array_2D):
         '''
@@ -186,6 +206,9 @@ class Dataset():
             data_array_flattened: The flattened list from data_array_2D, needed because pyplot cannot plot 2D matrices.
             hill_coeffs = (A, K, n, b): Coefficients for hill curve fitted to distribution
             std_devs: The list, as long as the number of concentrations, for the standard deviations at each concentration
+            S: sensitivity
+            LOD: Limit of detection
+            r2: r^2 value on how the hill curve fits the points
         Parameters:
             data_array_2D: 2D array of data we want to use. Must have x: concentration, y: device_number
         '''
@@ -200,62 +223,91 @@ class Dataset():
             
         # calculates slope, which is needed for LOD
         inf_point_x = inflection_point_hill_function(*hill_coeffs)
-        slope = derivative_hill_function(inf_point_x, *hill_coeffs)
-        print('inf point', inf_point_x)
+        S = derivative_hill_function(inf_point_x, *hill_coeffs)
+        # print('inf point', inf_point_x)
 
         # calculates standard deviation at low concentration, which is needed for lOD 
         conc_to_take_std_dev = 3
         std_dev = np.std(data_array_flattened[conc_to_take_std_dev*self.num_devices:conc_to_take_std_dev*(self.num_devices+1)])
 
         # caluclates and prints LOD, LOQ, and dynamic range
-        LOD = 3.3 * std_dev / slope
-        LOQ = 10 * std_dev / slope
-        print(f'sensitivity: {slope}') # :.4f}')
+        LOD = 3.3 * std_dev / S
+        LOQ = 10 * std_dev / S
+        # print(f'sensitivity: {S}') # :.4f}')
         print(f'LOD: {LOD} for decade, but for real:', str(10**(-18 + LOD)))
-        print(f'Theoetical dynamic range: {LOD} to {999999}')
-        print(f'Experimental dynamic range: {LOD} to 10^-9')
-        print(f'LOQ: {LOQ}')
-        print(f'Dynamic range: {LOD} to {LOQ}')
+        # print(f'Theoetical dynamic range: {LOD} to {999999}')
+        # print(f'Experimental dynamic range: {LOD} to 10^-9')
+        # print(f'LOQ: {LOQ}')
+        # print(f'Dynamic range: {LOD} to {LOQ}')
+
+        # calculates r^2
+        predicted_data = [hill_function(conc, *hill_coeffs) for conc in concentrations_list]
+        r2 = r2_score(data_array_flattened, predicted_data)
+
+        # calculates r^2 for only the linear region, 10^-18 - 10^-14
+        predicted_data_linear = [hill_function(conc, *hill_coeffs) for conc in concentrations_list[:self.num_devices*5]]
+        data_array_flattened_linear = data_array_flattened[:self.num_devices*5]
+        r2_linear = r2_score(data_array_flattened_linear, predicted_data_linear)
         
-        return concentrations_list, data_array_flattened, hill_coeffs, std_devs
+        return concentrations_list, data_array_flattened, hill_coeffs, std_devs, S, LOD, r2, r2_linear
 
 
-    def dirac_analysis(self):
+    def sweep_dirac_analysis(self):
         '''
         Analysis for dirac voltage shift
         '''
         return self.analysis(self.adj_dirac_voltages)
 
-    def dirac_analysis_normalized(self):
+    def sweep_dirac_analysis_normalized(self):
         '''
         Analysis for normalized dirac voltage shift
         '''
-        return self.analysis(self.norm_dirac_voltages)
+        return self.analysis(self.normalize_2D_array(self.adj_dirac_voltages, self.apt_dirac_voltages))
+
+    def sweep_pos_transconductance_analysis(self):
+        return self.analysis(self.adj_pos_transc_voltages)
+
+    def sweep_pos_transconductance_analysis_normalized(self):
+        return self.analysis(self.normalize_2D_array(self.adj_pos_transc_voltages, self.apt_pos_transc_voltages))
+
+    def sweep_neg_transconductance_analysis(self):
+        return self.analysis(self.adj_neg_transc_voltages)
+
+    def sweep_neg_transconductance_analysis_normalized(self):
+        return self.analysis(self.normalize_2D_array(self.adj_neg_transc_voltages, self.apt_neg_transc_voltages))
         
-    def pos_transc_conduc_analysis(self):
+    def static_dirac_analysis(self):
+        avg_apt_dirac_voltage = np.mean(list(self.apt_dirac_voltages.values()))   
+        return self.analysis(self.conductance_shifts(avg_apt_dirac_voltage))
+
+    def static_dirac_analysis_normalized(self):
+        avg_apt_dirac_voltage = np.mean(list(self.apt_dirac_voltages.values()))   
+        return self.analysis(self.normalized_conductance_shifts(avg_apt_dirac_voltage))
+    
+    def static_pos_transc_conduc_analysis(self):
         '''
-        Analysis for transconductance conductance, at the mean of the positive transconductance point
+        Analysis for transconductance conductance, at the mean of the positive aptamer transconductance point
         '''
         avg_pos_apt_transc_voltage = np.mean(list(self.apt_pos_transc_voltages.values()))        
         return self.analysis(self.conductance_shifts(avg_pos_apt_transc_voltage))
 
-    def pos_transc_conduc_analysis_normalized(self):
+    def static_pos_transc_conduc_analysis_normalized(self):
         '''
-        Analysis for normalzied transconductance conductance, at the mean of the positive transconductance point
+        Analysis for normalzied transconductance conductance, at the mean of the positive aptamer transconductance point
         '''
         avg_pos_apt_transc_voltage = np.mean(list(self.apt_pos_transc_voltages.values()))
         return self.analysis(self.normalized_conductance_shifts(avg_pos_apt_transc_voltage))
         
-    def neg_transc_conduc_analysis(self):
+    def static_neg_transc_conduc_analysis(self):
         '''
-        Analysis for transconductance conductance, at the mean of the negative transconductance point
+        Analysis for transconductance conductance, at the mean of the negative aptamer transconductance point
         '''
         avg_neg_apt_transc_voltage = np.mean(list(self.apt_neg_transc_voltages.values()))        
         return self.analysis(self.conductance_shifts(avg_neg_apt_transc_voltage))
 
-    def neg_transc_conduc_analysis_normalized(self):
+    def static_neg_transc_conduc_analysis_normalized(self):
         '''
-        Analysis for normalized transconductance conductance, at the mean of the negative transconductance point
+        Analysis for normalized transconductance conductance, at the mean of the negative aptamer transconductance point
         '''
         avg_neg_apt_transc_voltage = np.mean(list(self.apt_neg_transc_voltages.values()))
         return self.analysis(self.normalized_conductance_shifts(avg_neg_apt_transc_voltage))
@@ -265,7 +317,7 @@ def hill_function(x, A, K, n, b):
     Hill curve
     Returns the value at input x, given coefficients
     '''
-    if K < 0: K=random.uniform(0, 5) # setting arbitrary K value if K<0 because this throws error. Done because polyfit
+    # if K < 0: K=random.uniform(0, 5) # setting arbitrary K value if K<0 because this throws error. Done because polyfit
     return A * (x**n) / (K**n + x**n) + b
 
 def derivative_hill_function(x, A, K, n, b):
@@ -281,12 +333,6 @@ def inflection_point_hill_function(A, K, n, b):
     Returns the inflection point, given coefficients
     '''
     return K* ((n-1)/(n+1))**(1/n)
-
-# def downward_hill_function(x, A, K, n, b):
-#     return A * (1 - (x**n) / (K**n + x**n)) + b
-
-# def inverse_hill_function(y, A, K, n, b):
-#     return np.power(((y - b) * K**n) / (A - (y - b)), 1/n)
 
 def format_with_e(x, pos):
     '''
