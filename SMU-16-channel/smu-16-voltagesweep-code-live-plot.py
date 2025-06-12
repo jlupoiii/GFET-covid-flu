@@ -15,31 +15,30 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from matplotlib.ticker import FuncFormatter
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import csv
 import tkinter as tk
 from tkinter import filedialog
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import atexit
 import numpy as np
 
 
 def redraw_plot(*args):
     ax.clear()
-    min_current = float('inf')
     max_current = float('-inf')
-
+    min_current = float('inf')
     for i in range(16):
         if channel_enabled[i].get():
-            ax.plot(gate_voltages, channel_data[i], label=f'Ch {i}')
-            ch_min = min(channel_data[i])
-            ch_max = max(channel_data[i])
-            if ch_min < min_current: min_current = ch_min
-            if ch_max > max_current: max_current = ch_max
-
-    ax.set_xlabel("Gate Voltage (V)")
-    ax.set_ylabel("Channel Reading")
-    ax.set_ylim(min_current, max_current)
-    ax.legend(ncol=1, fontsize='small', loc='center left', bbox_to_anchor=(1, 0.5))
+            ax.plot(gate_voltages, [1000000*elt for elt in channel_data[i]], label=f'Channel {i}')
+            if min(channel_data[i]) < min_current: 
+                min_current = min(channel_data[i])
+            if max(channel_data[i]) > max_current: 
+                max_current = max(channel_data[i])
+    ax.set_xlabel(rf"Gate Voltage, $V_{{GS}}$ ($V$)")
+    ax.set_ylabel(rf"Drain-Source Current, $I_{{DS}}$ ($\mu A$)")
+    ax.set_ylim(min_current*1000000, max_current*1000000)
+    ax.legend(ncol=1, fontsize='small', loc='center left', bbox_to_anchor=(1, 0.5))#, loc='upper right')
     canvas.draw()
 
 
@@ -75,7 +74,7 @@ def plot_transcondutance():
             x = np.array(gate_voltages)
             dy_dx = np.gradient(y, x)
 
-            ax_deriv.plot(x, dy_dx, label=f'dI/dV Ch {i}')
+            ax_deriv.plot(x, dy_dx*1000000, label=f'dI/dV Ch {i}')
             plotted_any = True
             
             transconductance_gate_voltages.append(x[np.argmin(dy_dx)])
@@ -87,8 +86,8 @@ def plot_transcondutance():
     avg_transconductance_gate_voltage = np.mean(transconductance_gate_voltages)
     ax_deriv.axvline(avg_transconductance_gate_voltage, color='grey', linestyle='--')
     
-    ax_deriv.set_xlabel("Gate Voltage (V)")
-    ax_deriv.set_ylabel("Transconductance (A/V)")
+    ax_deriv.set_xlabel(rf"Gate Voltage, $V_{{GS}}$ ($V$)")
+    ax_deriv.set_ylabel(rf"Transconductance, $g_m$ ($\mu A/V$)")
     ax_deriv.set_title(f"Transconductance\n Average Neg Transconductance Point for Selected Channels: {avg_transconductance_gate_voltage:.3f} V")
     ax_deriv.legend(ncol=1, fontsize='small', loc='center left', bbox_to_anchor=(1, 0.5))
     plt.tight_layout()
@@ -118,10 +117,14 @@ for i in range(16):
 # right panel for IV plot, for GUI
 plot_frame = tk.Frame(root)
 plot_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        
+# add button below checkboxes in the control frame, for flipping/toggling all channels
+def flip_all_channels():
+    for var in channel_enabled:
+        var.set(not var.get())
+flip_button = tk.Button(control_frame, text="Toggle All Channels", command=flip_all_channels)
+flip_button.pack(pady=5)
 
-# # add button below checkboxes in the control frame, for saving the image
-# save_button = tk.Button(control_frame, text="Save Plot Image", command=save_image)
-# save_button.pack(pady=10)
 
 # End GUI setup
 
@@ -161,7 +164,7 @@ def ask_save_file_and_start():
     print(f"Saving data to: {save_path}")
     csv_file = open(save_path, 'w', newline='')
     csv_writer = csv.writer(csv_file)
-    header = ['POINT_NUM', 'TIMESTAMP', 'V_DRAIN', 'V_GATE'] + [f'I_CH{i}' for i in range(16)] + [f'TRANSC_CH{i}' for i in range(16)]
+    header = ['POINT_NUM', 'TIMESTAMP (s)', 'V_DRAIN (V)', 'V_GATE (V)'] + [f'I_CH{i} (A)' for i in range(16)] + [f'TRANSC_CH{i} ()' for i in range(16)]
     csv_writer.writerow(header)
     return True
 
@@ -191,11 +194,11 @@ def update(frame):
         
         # adds button for allowing user to plot the transconductance point once all voltages are swept
         plot_deriv_button = tk.Button(control_frame, text="Plot Transconductance", command=plot_transcondutance)
-        plot_deriv_button.pack(pady=5)
+        plot_deriv_button.pack(pady=10)
 
         # add button below checkboxes in the control frame, for saving the image
         save_button = tk.Button(control_frame, text="Save Plot Image", command=save_image)
-        save_button.pack(pady=10)
+        save_button.pack(pady=5)
 
     try:
         parts = line.split(",")
@@ -222,13 +225,16 @@ def update(frame):
         min_current = float('inf')
         for i in range(16):
             if channel_enabled[i].get():
-                ax.plot(gate_voltages, channel_data[i], label=f'Ch {i}')
-                if min(channel_data[i]) < min_current: min_current = min(channel_data[i])
-                if max(channel_data[i]) > max_current: max_current = max(channel_data[i])
-        ax.set_xlabel("Gate Voltage (V)")
-        ax.set_ylabel("Channel Reading")
-        ax.set_ylim(min_current, max_current)
+                ax.plot(gate_voltages, [1000000*elt for elt in channel_data[i]], label=f'Channel {i}')
+                if min(channel_data[i]) < min_current: 
+                    min_current = min(channel_data[i])
+                if max(channel_data[i]) > max_current: 
+                    max_current = max(channel_data[i])
+        ax.set_xlabel(rf"Gate Voltage, $V_{{GS}}$ ($V$)")
+        ax.set_ylabel(rf"Drain-Source Current, $I_{{DS}}$ ($\mu A$)")
+        ax.set_ylim(min_current*1000000, max_current*1000000)
         ax.legend(ncol=1, fontsize='small', loc='center left', bbox_to_anchor=(1, 0.5))#, loc='upper right')
+        
         canvas.draw()
         
         # Write to CSV, written line by line as the serial data is read
