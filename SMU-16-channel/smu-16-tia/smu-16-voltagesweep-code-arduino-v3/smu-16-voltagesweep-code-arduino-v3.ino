@@ -22,7 +22,7 @@ float start_time_s;
 
 const float sweep_delay_ms = 100; // 0.1s=100ms
 const float mux_delay_ms = 10; // 0.01s=10ms
-const int sweep_num_steps = (int) (gate_end_voltage - gate_start_voltage) * 100; // 100 times as many points, per volt, so 1V/100=10mV per division regardless of end voltage
+const int sweep_num_steps = (int)((gate_end_voltage - gate_start_voltage) * 100); // 100 times as many points, per volt, so 1V/100=10mV per division regardless of end voltage
 int step_number = 0; // keeps track of current sweep step
 
 /////////////////////////////////////////////////////////////////////
@@ -49,10 +49,109 @@ void set_gate_voltage(float voltage_unoffset) {
 
 /////////////////////////////////////////////////////////////////////
 
+//// Setup
+//void setup() {
+//  Serial.begin(115200);
+//  Wire.begin();
+//
+//  // Initialize multiplexer pins for drain and gate sensors
+//  for (int i = 0; i < 4; i++) {
+//    pinMode(mux_pins_drain[i], OUTPUT);
+//  }
+//  
+//  // Initialize I2C wires for ADC and two DACs
+//  dac_gate.begin(0x65, &Wire);
+//  ads.begin(0x48, &Wire);
+//  ads.setGain(GAIN_TWO);
+//
+//  select_drain_mux_channel(0);
+//
+//  // Set start gate voltage
+//  set_gate_voltage(gate_start_voltage);
+//
+//  // Wait for serial connection, and wait until Python sends "start", to begin the teensy code
+//  while (!Serial);
+//  while (true) {
+//    if (Serial.available()) {
+//      String cmd = Serial.readStringUntil('\n');
+//      if (cmd == "start") {
+//        break;
+//      }
+//    }
+//  }
+//
+//  
+//  }
+
+///////////////////////////////////////////////////////////////////////
+
+
+//// Loop
+//void loop() {
+//  // Stop loop once we’ve reached the final step
+//  if (step_number >= sweep_num_steps) {
+//    Serial.println("DONE");
+//    return;
+//  }
+//  if (step_number==0) {
+//    start_time_s = millis() / 1000.0;
+//  }
+//
+////   Log the step number(frame num), time elapsed since the start of the test, and the drain voltage (constant)
+//  Serial.print(step_number);
+//  Serial.print(", ");
+//  Serial.print(millis()/1000.0 - start_time_s, 3);
+//  Serial.print(", ");
+//
+//  // calculate gate voltage based on the step number, set the gate voltage, and log it
+//  float gate_voltage = gate_start_voltage + (gate_end_voltage - gate_start_voltage) * (float(step_number) / sweep_num_steps);
+//  set_gate_voltage(gate_voltage);
+//  Serial.print(gate_voltage, 2);
+////  Serial.print(", ");
+//
+//  // delay between gate voltage sweeps, to let the new gate voltage settle
+//  delay(sweep_delay_ms);
+//
+//
+////  float opamp_output_voltage =  read_adc(0);
+////  float current = (offset_voltage_tia - opamp_output_voltage) / R_f; // for R_f, negative feedback resistor
+////  Serial.print(current, 10);
+////  Serial.println(", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0");
+//
+//
+//  // Read all 16 mux channels
+//  for (int ch = 0; ch < num_channels_drain; ch++) {
+//    
+//    select_drain_mux_channel(ch);
+//    
+//    // let signal between mux channels settle with small delay
+//    delay(mux_delay_ms);
+//    
+//    float opamp_output_voltage =  read_adc(0);
+//    float current = (offset_voltage_tia - opamp_output_voltage) / R_f; // for R_f, negative feedback resistor
+//
+//    Serial.print(", ");
+//    Serial.print(current, 12); // replace this with the current reading
+////    Serial.print(opamp_output_voltage, 4); // replace this with the voltage reading
+//  }
+//  Serial.println("");
+//
+//  step_number++;  // Move to next voltage step
+//}
+
+
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
+
+bool sweeping = false;
+
 // Setup
 void setup() {
   Serial.begin(115200);
+//  Serial.setTimeout(5);      // <-- put it HERE
   Wire.begin();
+//  last_command_ms = millis();
 
   // Initialize multiplexer pins for drain and gate sensors
   for (int i = 0; i < 4; i++) {
@@ -68,28 +167,31 @@ void setup() {
 
   // Set start gate voltage
   set_gate_voltage(gate_start_voltage);
+}
 
 
-  
-  // Wait for serial connection, and wait until Python sends "start", to begin the teensy code
-  while (!Serial);
-  while (true) {
-    if (Serial.available()) {
-      String cmd = Serial.readStringUntil('\n');
-      if (cmd == "start") {
-        break;
-      }
-    }
-  }
-
-  
-  }
-
-///////////////////////////////////////////////////////////////////////
 
 
 // Loop
 void loop() {
+
+  // Check for Python command
+  if (Serial.available()) {
+    String cmd = Serial.readStringUntil('\n');
+    cmd.trim();
+    if (cmd == "start") {
+      sweeping = true;
+      step_number = 0;        // reset step count for new sweep
+      start_time_s = millis() / 1000.0;
+    } else if (cmd == "stop") {
+      sweeping = false;
+    }
+  }
+
+  if (!sweeping) return;
+
+
+  
   // Stop loop once we’ve reached the final step
   if (step_number >= sweep_num_steps) {
     Serial.println("DONE");

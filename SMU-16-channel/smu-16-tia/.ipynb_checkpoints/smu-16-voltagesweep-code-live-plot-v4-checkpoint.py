@@ -12,6 +12,9 @@ from PyQt5.QtGui import QPixmap
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
+from PyQt5.QtCore import Qt
+
+
 # -----------------------------
 # CONFIG
 # -----------------------------
@@ -34,6 +37,8 @@ class LivePlotter(QtWidgets.QMainWindow):
         self.x = []
         self.y = [[] for _ in range(N_CHANNELS)]
 
+        self.sweep_running = False
+
         # -----------------------------
         # Central widget
         # -----------------------------
@@ -44,9 +49,28 @@ class LivePlotter(QtWidgets.QMainWindow):
         # -----------------------------
         # Control panel (left)
         # -----------------------------
+
+        # start and stop buttons
         control = QtWidgets.QVBoxLayout()
         layout.addLayout(control, 0)
 
+        start_btn = QtWidgets.QPushButton("Start Sweep")
+        start_btn.setStyleSheet("background-color: green; color: white; font-weight: bold;")
+
+        stop_btn = QtWidgets.QPushButton("Stop Sweep")
+        stop_btn.setStyleSheet("background-color: red; color: white; font-weight: bold;")
+
+        
+        # start_btn.clicked.connect(lambda: self.send_serial("start"))
+        start_btn.clicked.connect(self.start_sweep)
+
+        # stop_btn.clicked.connect(lambda: self.send_serial("stop"))
+        stop_btn.clicked.connect(self.stop_sweep)
+        
+        control.addWidget(start_btn)
+        control.addWidget(stop_btn)
+        
+        # Toggle channel buttons
         control.addWidget(QtWidgets.QLabel("Toggle Channels"))
 
         self.channel_enabled = []
@@ -82,9 +106,9 @@ class LivePlotter(QtWidgets.QMainWindow):
         
         control.addLayout(ylayout)
 
-        # Auto-scale Y-axis button
-        autoscale_btn = QtWidgets.QPushButton("Auto Y-scale")
-        autoscale_btn.clicked.connect(self.autoscale_y)
+        # Auto-scale button
+        autoscale_btn = QtWidgets.QPushButton("Auto-scale")
+        autoscale_btn.clicked.connect(self.autoscale)
         control.addWidget(autoscale_btn)
 
         
@@ -175,78 +199,157 @@ class LivePlotter(QtWidgets.QMainWindow):
         # -----------------------------
         self.csv_file = None
         self.csv_writer = None
-        self.setup_csv()
+        # self.setup_csv()
 
         # -----------------------------
         # Serial
         # -----------------------------
-        self.ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
-        time.sleep(2)
-        self.ser.write(b"start\n")
+        self.ser = None  # placeholder
 
-        # -----------------------------
-        # Timer (poll serial)
-        # -----------------------------
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.read_serial)
-        self.timer.start(10)  # fast polling
-
-    # -----------------------------
-    # CSV
-    # -----------------------------
-    def setup_csv(self):
-        path, _ = QtWidgets.QFileDialog.getSaveFileName(
-            self,
-            "Save CSV",
-            "",
-            "CSV Files (*.csv)"
-        )
-        if not path:
-            sys.exit(0)
-
-        self.csv_file = open(path, "w", newline="")
-        self.csv_writer = csv.writer(self.csv_file)
-
-        header = (
-            ["POINT", "TIME", "V_GATE"]
-            + [f"I_CH{i}" for i in range(N_CHANNELS)]
-        )
-        self.csv_writer.writerow(header)
-
-    # -----------------------------
-    # Serial read
-    # -----------------------------
-    def read_serial(self):
+    def init_serial(self):
         try:
+            self.ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2)
+            print("Serial connected")
+    
+            # Force Teensy reset (non-blocking, very short)
+            self.ser.setDTR(False)
+            time.sleep(0.05)
+            self.ser.setDTR(True)
+    
+        except Exception as e:
+            print(f"Serial init failed: {e}")
+            self.ser = None
+
+    def send_serial(self, msg):
+        if self.ser is None:
+            print("Serial not initialized yet")
+            return
+        try:
+            if self.ser.is_open:
+                self.ser.write(f"{msg}\n".encode())
+                self.ser.flush()  # <- ensure it sends immediately
+                print(f"Sent '{msg}' through serial successfully")
+        except Exception as e:
+            print(f"Error sending {msg}: {e}")
+
+    def start_sweep(self):
+        # Clear data
+        self.x.clear()
+        for ch in self.y:
+            ch.clear()
+        for curve in self.curves:
+            curve.setData([], [])
+
+        # setup csv
+        if self.csv_file:
+            self.csv_file.close()
+            self.csv_file = None
+            self.csv_writer = None
+        self.setup_csv()
+    
+        # Close previous serial if open
+        if self.ser and self.ser.is_open:
+            self.ser.close()
+    
+        # Open serial fresh (timeout=2s like before)
+        self.ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2)
+        self.ser.setDTR(False)
+        time.sleep(0.05)
+        self.ser.setDTR(True)
+        time.sleep(0.5)
+    
+        # Send start command
+        self.send_serial("start")
+        self.sweep_running = True
+    
+        # Blocking read loop (GUI stays responsive with processEvents)
+        while self.sweep_running:
             line = self.ser.readline().decode().strip()
             if not line:
-                return
-
+                continue
+    
             if line == "DONE":
-                self.timer.stop()
-                return
-
+                self.stop_sweep()
+                break
+    
             parts = line.split(",")
             if len(parts) != 19:
-                return
-
+                continue
+    
             step = int(parts[0])
             t = float(parts[1])
             vg = float(parts[2])
             currents = list(map(float, parts[3:]))
-
+    
             self.x.append(vg)
             for i in range(N_CHANNELS):
                 self.y[i].append(currents[i] * 1e6)
 
-            # CSV write
+            # write to current csv sweep
             self.csv_writer.writerow([step, t, vg] + currents)
             self.csv_file.flush()
-
+    
             self.update_plot()
+            QtWidgets.QApplication.processEvents()  # keeps GUI responsive
 
-        except Exception as e:
-            print("Serial error:", e)
+
+
+    def stop_sweep(self):
+        # Stop the running loop
+        self.sweep_running = False
+
+        # Close CSV for this sweep
+        if self.csv_file:
+            self.csv_file.close()
+            self.csv_file = None
+            self.csv_writer = None
+    
+        # Tell Teensy to stop sweep
+        if self.ser and self.ser.is_open:
+            try:
+                self.ser.write(b"stop\n")
+                self.ser.flush()  # ensure the command is sent
+            except Exception as e:
+                print("Error sending stop:", e)
+            
+            # Close the serial connection
+            try:
+                self.ser.close()
+                print("Serial connection closed")
+            except Exception as e:
+                print("Error closing serial:", e)
+        
+        # Optional: clear serial object so it can be reopened later
+        self.ser = None
+
+    def closeEvent(self, event):
+        self.stop_sweep()
+        event.accept()
+            
+    # -----------------------------
+    # CSV
+    # -----------------------------
+    def setup_csv(self):
+        dialog = QFileDialog(self, "Save CSV")
+        dialog.setAcceptMode(QFileDialog.AcceptSave)
+        dialog.setNameFilter("CSV Files (*.csv)")
+        dialog.setOptions(QFileDialog.DontUseNativeDialog)
+        dialog.setWindowFlags(dialog.windowFlags() | Qt.WindowStaysOnTopHint)  # force on top
+    
+        if dialog.exec_() == QFileDialog.Accepted:
+            path = dialog.selectedFiles()[0]
+            if not path.lower().endswith(".csv"):
+                path += ".csv"
+        else:
+            sys.exit(0)
+    
+        self.csv_file = open(path, "w", newline="")
+        self.csv_writer = csv.writer(self.csv_file)
+    
+        header = ["POINT", "TIME", "V_GATE"] + [f"I_CH{i}" for i in range(N_CHANNELS)]
+        self.csv_writer.writerow(header)
+        print(f"CSV file created: {path}")
+
 
     # -----------------------------
     # Plot update (FAST)
@@ -286,8 +389,8 @@ class LivePlotter(QtWidgets.QMainWindow):
         except ValueError:
             pass
 
-    def autoscale_y(self):
-        """Auto-scale the Y-axis based on the currently visible channels."""
+    def autoscale(self):
+        """Auto-scale the axes based on the currently visible channels."""
         ymin, ymax = None, None
         # Go through all visible channels
         for i, cb in enumerate(self.channel_enabled):
@@ -304,7 +407,8 @@ class LivePlotter(QtWidgets.QMainWindow):
             margin = 0.05 * (ymax - ymin)  # optional 5% padding
             ymin -= margin
             ymax += margin
-            self.plot.setYRange(ymin, ymax)
+            # self.plot.setYRange(ymin, ymax)
+            self.plot.enableAutoRange()
             # Update the boxes
             self.ymin_box.setText(f"{ymin:.2f}")
             self.ymax_box.setText(f"{ymax:.2f}")
