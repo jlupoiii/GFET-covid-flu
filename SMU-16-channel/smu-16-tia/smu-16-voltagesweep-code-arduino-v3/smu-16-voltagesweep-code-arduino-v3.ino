@@ -14,15 +14,15 @@ Adafruit_ADS1115 ads;
 const int mux_pins_drain[4] = {0, 1, 2, 3};
 const int num_channels_drain = 16;
 
-float offset_voltage_tia = 1.5; // 1.5, positive value
-float gate_start_voltage = -0.5; // minimum value is -1.5 [-1 * offset_voltage_tia]
-float gate_end_voltage = 1.5; // maximum value is 1.8 [-1 * offset_voltage_tia + 3.3]
+float offset_voltage_tia = 1.5; // 1.5, positive value // default value, will be overridden by python serial inuput
+float gate_start_voltage = -0.5; // minimum value is -1.5 [-1 * offset_voltage_tia] // default value, will be overridden by python serial inuput
+float gate_end_voltage = 1.0; // maximum value is 1.8 [-1 * offset_voltage_tia + 3.3]
 float R_f = 15000; // negative feedback resistor for transimpedance aplifier
 float start_time_s;
 
-const float sweep_delay_ms = 100; // 0.1s=100ms
+float sweep_delay_ms = 100; // 0.1s=100ms
 const float mux_delay_ms = 10; // 0.01s=10ms
-const int sweep_num_steps = (int)((gate_end_voltage - gate_start_voltage) * 100); // 100 times as many points, per volt, so 1V/100=10mV per division regardless of end voltage
+int sweep_num_steps = (int)((gate_end_voltage - gate_start_voltage) * 100); // 100 times as many points, per volt, so 1V/100=10mV per division regardless of end voltage
 int step_number = 0; // keeps track of current sweep step
 
 /////////////////////////////////////////////////////////////////////
@@ -149,9 +149,7 @@ bool sweeping = false;
 // Setup
 void setup() {
   Serial.begin(115200);
-//  Serial.setTimeout(5);      // <-- put it HERE
   Wire.begin();
-//  last_command_ms = millis();
 
   // Initialize multiplexer pins for drain and gate sensors
   for (int i = 0; i < 4; i++) {
@@ -165,8 +163,8 @@ void setup() {
 
   select_drain_mux_channel(0);
 
-  // Set start gate voltage
-  set_gate_voltage(gate_start_voltage);
+//  // Set start gate voltage
+//  set_gate_voltage(gate_start_voltage);
 }
 
 
@@ -179,10 +177,42 @@ void loop() {
   if (Serial.available()) {
     String cmd = Serial.readStringUntil('\n');
     cmd.trim();
-    if (cmd == "start") {
+
+//    if (cmd.startsWith("start")) {
+//        sweeping = true;
+//        step_number = 0;
+//    
+//        // Parse min and max voltages
+//        int first_comma = cmd.indexOf(',');
+//        int second_comma = cmd.indexOf(',', first_comma + 1);
+//        if (first_comma > 0 && second_comma > first_comma) {
+//            gate_start_voltage = cmd.substring(first_comma + 1, second_comma).toFloat();
+//            gate_end_voltage = cmd.substring(second_comma + 1).toFloat();
+//            sweep_num_steps = int((gate_end_voltage - gate_start_voltage) * 100);
+//        }
+//        set_gate_voltage(gate_start_voltage);
+//        start_time_s = millis() / 1000.0;
+    
+    if (cmd.startsWith("start")) {
       sweeping = true;
-      step_number = 0;        // reset step count for new sweep
+      step_number = 0;
+    
+      // Parse parameters
+      int i1 = cmd.indexOf(',');
+      int i2 = cmd.indexOf(',', i1 + 1);
+      int i3 = cmd.indexOf(',', i2 + 1);
+    
+      if (i1 > 0 && i2 > i1 && i3 > i2) {
+        gate_start_voltage = cmd.substring(i1 + 1, i2).toFloat();
+        gate_end_voltage   = cmd.substring(i2 + 1, i3).toFloat();
+        sweep_delay_ms     = cmd.substring(i3 + 1).toFloat();
+    
+        sweep_num_steps = int((gate_end_voltage - gate_start_voltage) * 100);
+      }
+    
       start_time_s = millis() / 1000.0;
+
+
     } else if (cmd == "stop") {
       sweeping = false;
     }

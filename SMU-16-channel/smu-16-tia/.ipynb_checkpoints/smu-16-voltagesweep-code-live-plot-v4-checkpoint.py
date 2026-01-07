@@ -60,15 +60,35 @@ class LivePlotter(QtWidgets.QMainWindow):
         stop_btn = QtWidgets.QPushButton("Stop Sweep")
         stop_btn.setStyleSheet("background-color: red; color: white; font-weight: bold;")
 
-        
-        # start_btn.clicked.connect(lambda: self.send_serial("start"))
         start_btn.clicked.connect(self.start_sweep)
-
-        # stop_btn.clicked.connect(lambda: self.send_serial("stop"))
         stop_btn.clicked.connect(self.stop_sweep)
         
         control.addWidget(start_btn)
         control.addWidget(stop_btn)
+
+        # setting voltage values for gate voltage
+        control.addWidget(QtWidgets.QLabel("Gate Voltage Range (V)"))
+        
+        gate_range_layout = QtWidgets.QHBoxLayout()
+        
+        self.vmin_box = QtWidgets.QLineEdit("-0.5")  # default min
+        self.vmax_box = QtWidgets.QLineEdit("1.5")   # default max
+        
+        self.vmin_box.setFixedWidth(60)
+        self.vmax_box.setFixedWidth(60)
+        
+        gate_range_layout.addWidget(self.vmin_box)
+        gate_range_layout.addWidget(QtWidgets.QLabel("-"))
+        gate_range_layout.addWidget(self.vmax_box)
+        
+        control.addLayout(gate_range_layout)
+
+        # Sweep delay input, step delay
+        control.addWidget(QtWidgets.QLabel("Sweep Delay (ms)"))
+        
+        self.sweep_delay_box = QtWidgets.QLineEdit("100")  # default 100 ms
+        self.sweep_delay_box.setFixedWidth(80)
+        control.addWidget(self.sweep_delay_box)
         
         # Toggle channel buttons
         control.addWidget(QtWidgets.QLabel("Toggle Channels"))
@@ -233,6 +253,44 @@ class LivePlotter(QtWidgets.QMainWindow):
             print(f"Error sending {msg}: {e}")
 
     def start_sweep(self):
+
+        # Validate gate voltage inputs
+        try:
+            vmin = float(self.vmin_box.text())
+            vmax = float(self.vmax_box.text())
+        except ValueError:
+            QtWidgets.QMessageBox.critical(
+                self, "Input Error", "Gate voltages must be numbers."
+            )
+            return
+
+        if vmin < -1.5 or vmax > 1.5 or vmin >= vmax:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Input Error",
+                "Gate voltages must satisfy:\n-1.5 ≤ min < max ≤ 1.5",
+            )
+            return
+
+        # Validate step delay input
+        try:
+            sweep_delay_ms = float(self.sweep_delay_box.text())
+        except ValueError:
+            QtWidgets.QMessageBox.critical(
+                self, "Input Error", "Sweep delay must be a number (ms)."
+            )
+            return
+    
+        if sweep_delay_ms <= 0 or sweep_delay_ms > 5000:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Input Error",
+                "Sweep delay must be between 0 and 5000 ms."
+            )
+            return
+
+            
+        
         # Clear data
         self.x.clear()
         for ch in self.y:
@@ -259,7 +317,8 @@ class LivePlotter(QtWidgets.QMainWindow):
         time.sleep(0.5)
     
         # Send start command
-        self.send_serial("start")
+        self.send_serial(f"start,{vmin},{vmax},{sweep_delay_ms}")
+
         self.sweep_running = True
     
         # Blocking read loop (GUI stays responsive with processEvents)
