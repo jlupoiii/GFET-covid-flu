@@ -18,12 +18,15 @@ float offset_voltage_tia = 1.5; // 1.5, positive value // default value, will be
 float gate_start_voltage = -0.5; // minimum value is -1.5 [-1 * offset_voltage_tia] // default value, will be overridden by python serial inuput
 float gate_end_voltage = 1.0; // maximum value is 1.8 [-1 * offset_voltage_tia + 3.3]
 float R_f = 15000; // negative feedback resistor for transimpedance aplifier
-float start_time_s;
 
 float sweep_delay_ms = 100; // 0.1s=100ms
 const float mux_delay_ms = 10; // 0.01s=10ms
 int sweep_num_steps = (int)((gate_end_voltage - gate_start_voltage) * 100); // 100 times as many points, per volt, so 1V/100=10mV per division regardless of end voltage
 int step_number = 0; // keeps track of current sweep step
+
+bool sweeping = false; // true or false depeding on when measurements are actively being taken
+float start_time_s; // the time at which the measurements begin 
+
 
 /////////////////////////////////////////////////////////////////////
 
@@ -49,102 +52,6 @@ void set_gate_voltage(float voltage_unoffset) {
 
 /////////////////////////////////////////////////////////////////////
 
-//// Setup
-//void setup() {
-//  Serial.begin(115200);
-//  Wire.begin();
-//
-//  // Initialize multiplexer pins for drain and gate sensors
-//  for (int i = 0; i < 4; i++) {
-//    pinMode(mux_pins_drain[i], OUTPUT);
-//  }
-//  
-//  // Initialize I2C wires for ADC and two DACs
-//  dac_gate.begin(0x65, &Wire);
-//  ads.begin(0x48, &Wire);
-//  ads.setGain(GAIN_TWO);
-//
-//  select_drain_mux_channel(0);
-//
-//  // Set start gate voltage
-//  set_gate_voltage(gate_start_voltage);
-//
-//  // Wait for serial connection, and wait until Python sends "start", to begin the teensy code
-//  while (!Serial);
-//  while (true) {
-//    if (Serial.available()) {
-//      String cmd = Serial.readStringUntil('\n');
-//      if (cmd == "start") {
-//        break;
-//      }
-//    }
-//  }
-//
-//  
-//  }
-
-///////////////////////////////////////////////////////////////////////
-
-
-//// Loop
-//void loop() {
-//  // Stop loop once we’ve reached the final step
-//  if (step_number >= sweep_num_steps) {
-//    Serial.println("DONE");
-//    return;
-//  }
-//  if (step_number==0) {
-//    start_time_s = millis() / 1000.0;
-//  }
-//
-////   Log the step number(frame num), time elapsed since the start of the test, and the drain voltage (constant)
-//  Serial.print(step_number);
-//  Serial.print(", ");
-//  Serial.print(millis()/1000.0 - start_time_s, 3);
-//  Serial.print(", ");
-//
-//  // calculate gate voltage based on the step number, set the gate voltage, and log it
-//  float gate_voltage = gate_start_voltage + (gate_end_voltage - gate_start_voltage) * (float(step_number) / sweep_num_steps);
-//  set_gate_voltage(gate_voltage);
-//  Serial.print(gate_voltage, 2);
-////  Serial.print(", ");
-//
-//  // delay between gate voltage sweeps, to let the new gate voltage settle
-//  delay(sweep_delay_ms);
-//
-//
-////  float opamp_output_voltage =  read_adc(0);
-////  float current = (offset_voltage_tia - opamp_output_voltage) / R_f; // for R_f, negative feedback resistor
-////  Serial.print(current, 10);
-////  Serial.println(", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0");
-//
-//
-//  // Read all 16 mux channels
-//  for (int ch = 0; ch < num_channels_drain; ch++) {
-//    
-//    select_drain_mux_channel(ch);
-//    
-//    // let signal between mux channels settle with small delay
-//    delay(mux_delay_ms);
-//    
-//    float opamp_output_voltage =  read_adc(0);
-//    float current = (offset_voltage_tia - opamp_output_voltage) / R_f; // for R_f, negative feedback resistor
-//
-//    Serial.print(", ");
-//    Serial.print(current, 12); // replace this with the current reading
-////    Serial.print(opamp_output_voltage, 4); // replace this with the voltage reading
-//  }
-//  Serial.println("");
-//
-//  step_number++;  // Move to next voltage step
-//}
-
-
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-
-bool sweeping = false;
 
 // Setup
 void setup() {
@@ -162,9 +69,6 @@ void setup() {
   ads.setGain(GAIN_TWO);
 
   select_drain_mux_channel(0);
-
-//  // Set start gate voltage
-//  set_gate_voltage(gate_start_voltage);
 }
 
 
@@ -178,21 +82,6 @@ void loop() {
     String cmd = Serial.readStringUntil('\n');
     cmd.trim();
 
-//    if (cmd.startsWith("start")) {
-//        sweeping = true;
-//        step_number = 0;
-//    
-//        // Parse min and max voltages
-//        int first_comma = cmd.indexOf(',');
-//        int second_comma = cmd.indexOf(',', first_comma + 1);
-//        if (first_comma > 0 && second_comma > first_comma) {
-//            gate_start_voltage = cmd.substring(first_comma + 1, second_comma).toFloat();
-//            gate_end_voltage = cmd.substring(second_comma + 1).toFloat();
-//            sweep_num_steps = int((gate_end_voltage - gate_start_voltage) * 100);
-//        }
-//        set_gate_voltage(gate_start_voltage);
-//        start_time_s = millis() / 1000.0;
-    
     if (cmd.startsWith("start")) {
       sweeping = true;
       step_number = 0;
@@ -212,15 +101,12 @@ void loop() {
     
       start_time_s = millis() / 1000.0;
 
-
     } else if (cmd == "stop") {
       sweeping = false;
     }
   }
 
   if (!sweeping) return;
-
-
   
   // Stop loop once we’ve reached the final step
   if (step_number >= sweep_num_steps) {
@@ -246,13 +132,6 @@ void loop() {
   // delay between gate voltage sweeps, to let the new gate voltage settle
   delay(sweep_delay_ms);
 
-
-//  float opamp_output_voltage =  read_adc(0);
-//  float current = (offset_voltage_tia - opamp_output_voltage) / R_f; // for R_f, negative feedback resistor
-//  Serial.print(current, 10);
-//  Serial.println(", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0");
-
-
   // Read all 16 mux channels
   for (int ch = 0; ch < num_channels_drain; ch++) {
     
@@ -265,8 +144,7 @@ void loop() {
     float current = (offset_voltage_tia - opamp_output_voltage) / R_f; // for R_f, negative feedback resistor
 
     Serial.print(", ");
-    Serial.print(current, 12); // replace this with the current reading
-//    Serial.print(opamp_output_voltage, 4); // replace this with the voltage reading
+    Serial.print(current, 12);
   }
   Serial.println("");
 
