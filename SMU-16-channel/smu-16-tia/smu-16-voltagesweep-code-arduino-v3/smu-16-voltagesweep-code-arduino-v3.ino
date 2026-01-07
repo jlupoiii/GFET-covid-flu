@@ -58,7 +58,7 @@ void setup() {
   for (int i = 0; i < 4; i++) {
     pinMode(mux_pins_drain[i], OUTPUT);
   }
-
+  
   // Initialize I2C wires for ADC and two DACs
   dac_gate.begin(0x65, &Wire);
   ads.begin(0x48, &Wire);
@@ -68,6 +68,8 @@ void setup() {
 
   // Set start gate voltage
   set_gate_voltage(gate_start_voltage);
+
+
   
   // Wait for serial connection, and wait until Python sends "start", to begin the teensy code
   while (!Serial);
@@ -80,8 +82,8 @@ void setup() {
     }
   }
 
-
-}
+  
+  }
 
 ///////////////////////////////////////////////////////////////////////
 
@@ -113,7 +115,6 @@ void loop() {
   delay(sweep_delay_ms);
 
 
-
 //  float opamp_output_voltage =  read_adc(0);
 //  float current = (offset_voltage_tia - opamp_output_voltage) / R_f; // for R_f, negative feedback resistor
 //  Serial.print(current, 10);
@@ -122,16 +123,15 @@ void loop() {
 
   // Read all 16 mux channels
   for (int ch = 0; ch < num_channels_drain; ch++) {
-
     
     select_drain_mux_channel(ch);
-//    select_drain_mux_channel(1);
     
     // let signal between mux channels settle with small delay
     delay(mux_delay_ms);
     
     float opamp_output_voltage =  read_adc(0);
     float current = (offset_voltage_tia - opamp_output_voltage) / R_f; // for R_f, negative feedback resistor
+
     Serial.print(", ");
     Serial.print(current, 12); // replace this with the current reading
 //    Serial.print(opamp_output_voltage, 4); // replace this with the voltage reading
