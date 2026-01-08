@@ -8,7 +8,6 @@
 
 // Global variables used
 Adafruit_MCP4725 dac_gate;
-//Adafruit_MCP4725 dac_drain;
 Adafruit_ADS1115 ads;
 
 const int mux_pins_drain[4] = {0, 1, 2, 3};

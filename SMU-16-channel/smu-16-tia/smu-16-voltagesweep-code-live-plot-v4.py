@@ -6,12 +6,10 @@ import numpy as np
 
 from PyQt5 import QtWidgets, QtCore
 import pyqtgraph as pg
-# from pyqtgraph.exporters import ImageExporter
 from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtGui import QPixmap
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-
 from PyQt5.QtCore import Qt
 
 
@@ -65,8 +63,9 @@ class LivePlotter(QtWidgets.QMainWindow):
         
         control.addWidget(start_btn)
         control.addWidget(stop_btn)
+        
 
-        # setting voltage values for gate voltage
+        # button for setting voltage values for gate voltage
         control.addWidget(QtWidgets.QLabel("Gate Voltage Range (V)"))
         
         gate_range_layout = QtWidgets.QHBoxLayout()
@@ -83,12 +82,14 @@ class LivePlotter(QtWidgets.QMainWindow):
         
         control.addLayout(gate_range_layout)
 
-        # Sweep delay input, step delay
+
+        # Sweep delay input button, step delay
         control.addWidget(QtWidgets.QLabel("Sweep Delay (ms)"))
         
         self.sweep_delay_box = QtWidgets.QLineEdit("100")  # default 100 ms
         self.sweep_delay_box.setFixedWidth(80)
         control.addWidget(self.sweep_delay_box)
+
         
         # Toggle channel buttons
         control.addWidget(QtWidgets.QLabel("Toggle Channels"))
@@ -219,7 +220,6 @@ class LivePlotter(QtWidgets.QMainWindow):
         # -----------------------------
         self.csv_file = None
         self.csv_writer = None
-        # self.setup_csv()
 
         # -----------------------------
         # Serial
@@ -289,7 +289,6 @@ class LivePlotter(QtWidgets.QMainWindow):
             )
             return
 
-            
         
         # Clear data
         self.x.clear()
@@ -303,7 +302,10 @@ class LivePlotter(QtWidgets.QMainWindow):
             self.csv_file.close()
             self.csv_file = None
             self.csv_writer = None
-        self.setup_csv()
+        if not self.setup_csv():
+            # exit out of window if X'd out or canceled  out of CSV save window
+            print("CSV save canceled, sweep not started")
+            return
     
         # Close previous serial if open
         if self.ser and self.ser.is_open:
@@ -318,6 +320,7 @@ class LivePlotter(QtWidgets.QMainWindow):
     
         # Send start command
         self.send_serial(f"start,{vmin},{vmax},{sweep_delay_ms}")
+
 
         self.sweep_running = True
     
@@ -400,7 +403,7 @@ class LivePlotter(QtWidgets.QMainWindow):
             if not path.lower().endswith(".csv"):
                 path += ".csv"
         else:
-            sys.exit(0)
+            return False
     
         self.csv_file = open(path, "w", newline="")
         self.csv_writer = csv.writer(self.csv_file)
@@ -408,6 +411,7 @@ class LivePlotter(QtWidgets.QMainWindow):
         header = ["POINT", "TIME", "V_GATE"] + [f"I_CH{i}" for i in range(N_CHANNELS)]
         self.csv_writer.writerow(header)
         print(f"CSV file created: {path}")
+        return True
 
 
     # -----------------------------
