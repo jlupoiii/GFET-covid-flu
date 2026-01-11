@@ -254,6 +254,11 @@ class LivePlotter(QtWidgets.QMainWindow):
 
     def start_sweep(self):
 
+        # Ignore if a sweep is already running
+        if self.sweep_running:
+            print("Sweep already running - Start ignored")
+            return
+
         # Validate gate voltage inputs
         try:
             vmin = float(self.vmin_box.text())
@@ -353,7 +358,6 @@ class LivePlotter(QtWidgets.QMainWindow):
     
             self.update_plot()
             QtWidgets.QApplication.processEvents()  # keeps GUI responsive
-
 
 
     def stop_sweep(self):
