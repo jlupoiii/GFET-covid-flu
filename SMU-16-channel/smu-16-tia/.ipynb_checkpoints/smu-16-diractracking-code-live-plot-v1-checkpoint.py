@@ -459,7 +459,7 @@ class LivePlotter(QtWidgets.QMainWindow):
     
         header = ["SWEEP_IDX", "POINT", "TIME", "V_GATE"] \
                 + [f"I_CH{i}" for i in range(N_CHANNELS)] \
-                + ["SWEEP_IDX"] \
+                + ["DIRAC_SWEEP_IDX"] \
                 + [f"DIRAC_V_CH{i}" for i in range(N_CHANNELS)]
         
         self.csv_writer.writerow(header)

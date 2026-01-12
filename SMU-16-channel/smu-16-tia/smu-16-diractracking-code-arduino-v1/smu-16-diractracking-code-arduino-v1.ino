@@ -70,7 +70,6 @@ void setup() {
 
   select_drain_mux_channel(0);
   
-//  start_time_s = millis() / 1000.0;
 }
 
 
@@ -117,9 +116,6 @@ void loop() {
     step_number = 0;
     return;
   }
-//  if (step_number==0) {
-//    start_time_s = millis() / 1000.0;
-//  }
 
     if (!run_started) {
         start_time_s = millis()/1000.0;
