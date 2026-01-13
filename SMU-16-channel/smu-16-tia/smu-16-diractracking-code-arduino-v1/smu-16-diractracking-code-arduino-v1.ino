@@ -13,9 +13,9 @@ Adafruit_ADS1115 ads;
 const int mux_pins_drain[4] = {0, 1, 2, 3};
 const int num_channels_drain = 16;
 
-float offset_voltage_tia = 1.5; // 1.5, positive value // default value, will be overridden by python serial inuput
+float offset_voltage_tia = 1.5; //2.15; // 1.5, positive value // cannot change this value
 float gate_start_voltage = -0.5; // minimum value is -1.5 [-1 * offset_voltage_tia] // default value, will be overridden by python serial inuput
-float gate_end_voltage = 1.0; // maximum value is 1.8 [-1 * offset_voltage_tia + 3.3]
+float gate_end_voltage = 1.0; // maximum value is 1.8 [-1 * offset_voltage_tia + 3.3] // default value, will be overridden by python serial inuput
 float R_f = 15000; // negative feedback resistor for transimpedance aplifier
 
 float sweep_delay_ms = 100; // 0.1s=100ms

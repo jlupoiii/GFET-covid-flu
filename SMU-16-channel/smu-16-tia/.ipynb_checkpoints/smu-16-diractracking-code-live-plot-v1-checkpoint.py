@@ -2,6 +2,7 @@ import sys
 import time
 import csv
 import serial
+from serial.tools import list_ports
 import numpy as np
 
 from PyQt5 import QtWidgets, QtCore
@@ -16,7 +17,7 @@ from PyQt5.QtCore import Qt
 # -----------------------------
 # CONFIG
 # -----------------------------
-SERIAL_PORT = "COM6"
+# SERIAL_PORT = "COM6"
 BAUD_RATE = 115200
 N_CHANNELS = 16
 
@@ -413,12 +414,34 @@ class LivePlotter(QtWidgets.QMainWindow):
             
 
 
+    # def init_serial(self):
+    #     try:
+    #         self.ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2)
+    #         print("Serial connected")
+    
+    #         # Force Teensy reset (non-blocking, very short)
+    #         self.ser.setDTR(False)
+    #         time.sleep(0.05)
+    #         self.ser.setDTR(True)
+    
+    #     except Exception as e:
+    #         print(f"Serial init failed: {e}")
+    #         self.ser = None
     def init_serial(self):
         try:
-            self.ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2)
-            print("Serial connected")
+            port = None
+            for p in list_ports.comports():
+                if p.vid == 0x16C0:  # Teensy
+                    port = p.device
+                    break
     
-            # Force Teensy reset (non-blocking, very short)
+            if port is None:
+                raise RuntimeError("Teensy not found")
+    
+            self.ser = serial.Serial(port, BAUD_RATE, timeout=2)
+            print(f"Serial connected on {port}")
+    
+            # Reset Teensy
             self.ser.setDTR(False)
             time.sleep(0.05)
             self.ser.setDTR(True)
