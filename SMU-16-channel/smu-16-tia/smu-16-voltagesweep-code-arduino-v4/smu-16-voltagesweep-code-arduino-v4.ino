@@ -19,7 +19,7 @@ float gate_end_voltage = 1.0; // maximum value is 1.8 [-1 * offset_voltage_tia +
 float R_f = 15000; // negative feedback resistor for transimpedance aplifier
 
 float sweep_delay_ms = 100; // 0.1s=100ms
-const float mux_delay_ms = 10; // 0.01s=10ms
+const float mux_delay_ms = 1; // 0.001s=100ms
 int sweep_num_steps = (int)((gate_end_voltage - gate_start_voltage) * 100); // 100 times as many points, per volt, so 1V/100=10mV per division regardless of end voltage
 int step_number = 0; // keeps track of current sweep step
 
@@ -104,29 +104,60 @@ void loop() {
       sweeping = false;
     }
   }
-
   if (!sweeping) return;
-  
+
+
+ /////////////////////////////////////////////////////// code for only forward curve
+//  // Stop loop once we’ve reached the final step
+//  if (step_number >= sweep_num_steps) {
+//    Serial.println("DONE");
+//    return;
+//  }
+//  // for setting start time
+//  if (step_number==0) {
+//    start_time_s = millis() / 1000.0;
+//  }
+////   Log the step number(frame num), time elapsed since the start of the test, and the drain voltage (constant)
+//  Serial.print(step_number); 
+//  Serial.print(", ");
+//  Serial.print(millis()/1000.0 - start_time_s, 3);
+//  Serial.print(", ");
+//
+//  // calculate gate voltage based on the step number, set the gate voltage, and log it
+//  float gate_voltage = gate_start_voltage + (gate_end_voltage - gate_start_voltage) * (float(step_number) / sweep_num_steps);
+//  set_gate_voltage(gate_voltage);
+//  Serial.print(gate_voltage, 2);
+////  Serial.print(", ");
+ ///////////////////////////////////////////////////////
+
+
   // Stop loop once we’ve reached the final step
-  if (step_number >= sweep_num_steps) {
+  // calculate gate voltage based on the step number, set the gate voltage, and log it
+  // use clever math for forward vs reserve sweep
+  float gate_voltage;
+  if (step_number > 2*sweep_num_steps) {
     Serial.println("DONE");
     return;
-  }
+  } else if (step_number >= sweep_num_steps) {
+    gate_voltage = gate_end_voltage - (gate_end_voltage - gate_start_voltage) * (float(step_number - sweep_num_steps) / sweep_num_steps);
+  } else {
+    gate_voltage = gate_start_voltage + (gate_end_voltage - gate_start_voltage) * (float(step_number) / sweep_num_steps);
+  }  
+  // set the gate voltage
+  set_gate_voltage(gate_voltage);
+
+
+  // for setting start time
   if (step_number==0) {
     start_time_s = millis() / 1000.0;
   }
 
-//   Log the step number(frame num), time elapsed since the start of the test, and the drain voltage (constant)
-  Serial.print(step_number);
+  // Log the step number(frame num), time elapsed since the start of the test, the drain voltage (constant), and the gate voltage (sweeping)
+  Serial.print(step_number); 
   Serial.print(", ");
   Serial.print(millis()/1000.0 - start_time_s, 3);
   Serial.print(", ");
-
-  // calculate gate voltage based on the step number, set the gate voltage, and log it
-  float gate_voltage = gate_start_voltage + (gate_end_voltage - gate_start_voltage) * (float(step_number) / sweep_num_steps);
-  set_gate_voltage(gate_voltage);
   Serial.print(gate_voltage, 2);
-//  Serial.print(", ");
 
   // delay between gate voltage sweeps, to let the new gate voltage settle
   delay(sweep_delay_ms);

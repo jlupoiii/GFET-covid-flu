@@ -227,20 +227,20 @@ class LivePlotter(QtWidgets.QMainWindow):
         # -----------------------------
         self.ser = None  # placeholder
 
-    # def init_serial(self):
-    #     try:
-    #         self.ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2)
-    #         print("Serial connected")
-    
-    #         # Force Teensy reset (non-blocking, very short)
-    #         self.ser.setDTR(False)
-    #         time.sleep(0.05)
-    #         self.ser.setDTR(True)
-    
-    #     except Exception as e:
-    #         print(f"Serial init failed: {e}")
-    #         self.ser = None
     def init_serial(self):
+        # code for specifying the PORT to use
+        # try:
+        #     self.ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2)
+        #     print("Serial connected")
+    
+        #     # Force Teensy reset (non-blocking, very short)
+        #     self.ser.setDTR(False)
+        #     time.sleep(0.05)
+        #     self.ser.setDTR(True)
+    
+        # except Exception as e:
+        #     print(f"Serial init failed: {e}")
+        #     self.ser = None
         try:
             port = None
             for p in list_ports.comports():
@@ -592,7 +592,10 @@ class LivePlotter(QtWidgets.QMainWindow):
 # RUN
 # -----------------------------
 if __name__ == "__main__":
+    print('here0')
     app = QtWidgets.QApplication(sys.argv)
+    print('here1')
     win = LivePlotter()
+    print('here2')
     win.show()
     sys.exit(app.exec_())

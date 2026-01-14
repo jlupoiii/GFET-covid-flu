@@ -40,8 +40,10 @@ class LivePlotter(QtWidgets.QMainWindow):
         # Dirac tracking per channel
         # -----------------------------
         self.dirac_times = [[] for _ in range(N_CHANNELS)]
-        self.dirac_vals  = [[] for _ in range(N_CHANNELS)]
-        self.dirac_curves = []
+        self.dirac_vals_fwd  = [[] for _ in range(N_CHANNELS)]
+        self.dirac_vals_rev  = [[] for _ in range(N_CHANNELS)]
+        self.dirac_curves_fwd = []
+        self.dirac_curves_rev = []
 
         # -----------------------------
         # Central widget + main layout
@@ -148,8 +150,47 @@ class LivePlotter(QtWidgets.QMainWindow):
         self.legend_widget.setStyleSheet("background-color: black;")
         self.legend_panel = QtWidgets.QVBoxLayout(self.legend_widget)
         layout.addWidget(self.legend_widget, 0)
-
         label = QtWidgets.QLabel("   Legend   ")
+
+
+
+        # Dirac visibility toggles
+        dirac_btn_style = """
+        QPushButton {
+            background-color: #f0f0f0;   /* light grey / almost white */
+            color: black;
+            border: 1px solid #888;
+            padding: 6px;
+            font-weight: bold;
+        }
+        QPushButton:hover {
+            background-color: #e0e0e0;
+        }
+        QPushButton:checked {
+            background-color: #d0d0d0;
+        }
+        """
+        self.btn_dirac_fwd = None
+        self.btn_dirac_rev = None
+        self.show_dirac_fwd = True
+        self.show_dirac_rev = True
+        self.btn_dirac_fwd = QtWidgets.QPushButton("FWD Dirac Pt (\u25CF)") # ● \u25CF # circle
+        self.btn_dirac_fwd.setCheckable(True)
+        self.btn_dirac_fwd.setChecked(True)
+        self.btn_dirac_fwd.setStyleSheet(dirac_btn_style)
+        self.btn_dirac_fwd.clicked.connect(self.toggle_dirac_fwd)
+        
+        self.btn_dirac_rev = QtWidgets.QPushButton("REV Dirac Pt (\u25B6)") # ▶  \u25B6 # right-facing triangle
+        self.btn_dirac_rev.setCheckable(True)
+        self.btn_dirac_rev.setChecked(True)
+        self.btn_dirac_rev.setStyleSheet(dirac_btn_style)
+        self.btn_dirac_rev.clicked.connect(self.toggle_dirac_rev)
+        
+        self.legend_panel.addWidget(self.btn_dirac_fwd)
+        self.legend_panel.addWidget(self.btn_dirac_rev)
+
+        
+        # RIGHT: Legend, resumed
         label.setStyleSheet("color: white; font-weight: bold;")
         self.legend_panel.addWidget(label)
 
@@ -183,9 +224,15 @@ class LivePlotter(QtWidgets.QMainWindow):
             curve = self.plot.plot([], [], pen=self.channel_colors[i])
             self.curves.append(curve)
 
-        self.dirac_curves = [self.dirac_plot.plot([], [], pen=self.channel_colors[i], symbol="o",
+        self.dirac_curves_fwd = [self.dirac_plot.plot([], [], pen=self.channel_colors[i], symbol="o",
                                                            symbolBrush=self.channel_colors[i])
                                      for i in range(N_CHANNELS)]
+
+        self.dirac_curves_rev = [self.dirac_plot.plot([], [], pen=self.channel_colors[i], symbol="t2",
+                                                           symbolBrush=self.channel_colors[i])
+                                     for i in range(N_CHANNELS)]
+
+        
 
         # =============================
         # CSV + Serial
@@ -236,15 +283,16 @@ class LivePlotter(QtWidgets.QMainWindow):
         # Clear Dirac tracking
         for ch in range(N_CHANNELS):
             self.dirac_times[ch].clear()
-            self.dirac_vals[ch].clear()
-            self.dirac_curves[ch].setData([], [])
+            self.dirac_vals_fwd[ch].clear()
+            self.dirac_vals_rev[ch].clear()
+            self.dirac_curves_fwd[ch].setData([], [])
+            self.dirac_curves_rev[ch].setData([], [])
+            
 
         
         self.sweep_running = True    
         self.experiment_start_time = time.time()
         self.sweep_index = 0
-
-
         
         while self.sweep_running:
             # Validate gate voltage inputs
@@ -300,6 +348,7 @@ class LivePlotter(QtWidgets.QMainWindow):
             while self.sweep_running:
                 line = self.ser.readline().decode().strip()
                 if not line:
+                    print('Serial info not complete, received', line)
                     continue
     
                 if line == "DONE":
@@ -309,6 +358,7 @@ class LivePlotter(QtWidgets.QMainWindow):
                 parts = line.split(",")
                 if len(parts) != 19:
                     # sweep_completed = True
+                    print('Serial info not complete, received', line)
                     continue
     
                 step = int(parts[0])
@@ -373,61 +423,97 @@ class LivePlotter(QtWidgets.QMainWindow):
         Compute Dirac point for each channel for the current sweep,
         append them to the tracking lists, and write a row to the CSV
         with empty strings for the sweep point data columns.
-        """
+        """        
+        # # Time since the start of the experiment (not just this sweep)
+        # t = time.time() - self.experiment_start_time
+    
+        # # Compute Dirac points for all channels
+        # dirac_row = [""] * (4 + N_CHANNELS)  # Placeholder for SWEEP_IDX, POINT, TIME, V_GATE, I_CH0..15
+        # dirac_values = []
+    
+        # for ch in range(N_CHANNELS):
+        #     print(len(self.x))
+        #     if len(self.x) < 2:
+        #         dirac_v = ""
+        #     else:
+        #         y = np.array(self.y[ch])
+        #         x = np.array(self.x)
+        #         min_idx = np.argmin(np.abs(y))
+        #         dirac_v = x[min_idx]
+    
+        #     # Store for tracking
+        #     self.dirac_times[ch].append(t)
+        #     self.dirac_vals[ch].append(dirac_v)
+
+        #     # Update Dirac curve
+        #     self.dirac_curves[ch].setData(self.dirac_times[ch], self.dirac_vals[ch])
+    
+        #     dirac_values.append(dirac_v)
+    
+        # # Build the CSV row: first columns are sweep point placeholders, last columns are Dirac points
+        # csv_row = dirac_row + [self.sweep_index] + dirac_values
+    
+        # # Write to CSV
+        # if self.current_sweep_csv:
+        #     self.csv_writer.writerow(csv_row)
+        #     self.current_sweep_csv.flush()
+
         # Time since the start of the experiment (not just this sweep)
         t = time.time() - self.experiment_start_time
     
         # Compute Dirac points for all channels
         dirac_row = [""] * (4 + N_CHANNELS)  # Placeholder for SWEEP_IDX, POINT, TIME, V_GATE, I_CH0..15
-        dirac_values = []
+        dirac_values_fwd = []
+        dirac_values_rev = []
     
         for ch in range(N_CHANNELS):
             if len(self.x) < 2:
                 dirac_v = ""
             else:
                 y = np.array(self.y[ch])
-                x = np.array(self.x)
-                min_idx = np.argmin(np.abs(y))
-                dirac_v = x[min_idx]
+                x = np.array(self.x)                
+                min_idx_fwd = np.argmin(np.abs(y[:len(y)//2]))
+                min_idx_rev = np.argmin(np.abs(y[len(y)//2:]))
+                dirac_v_fwd = x[min_idx_fwd]
+                dirac_v_rev = x[min_idx_rev]
     
             # Store for tracking
             self.dirac_times[ch].append(t)
-            self.dirac_vals[ch].append(dirac_v)
-    
+            self.dirac_vals_fwd[ch].append(dirac_v_fwd)
+            self.dirac_vals_rev[ch].append(dirac_v_rev)
+            
+
+            # WILL THIS MESS STUFF UP???
             # Update Dirac curve
-            self.dirac_curves[ch].setData(self.dirac_times[ch], self.dirac_vals[ch])
-    
-            dirac_values.append(dirac_v)
+            self.dirac_curves_fwd[ch].setData(self.dirac_times[ch], self.dirac_vals_fwd[ch])
+            self.dirac_curves_rev[ch].setData(self.dirac_times[ch], self.dirac_vals_rev[ch])
+        
+            dirac_values_fwd.append(dirac_v_fwd)
+            dirac_values_rev.append(dirac_v_rev)
     
         # Build the CSV row: first columns are sweep point placeholders, last columns are Dirac points
-        csv_row = dirac_row + [self.sweep_index] + dirac_values
+        csv_row = dirac_row + [self.sweep_index] + dirac_values_fwd + dirac_values_rev
     
         # Write to CSV
         if self.current_sweep_csv:
             self.csv_writer.writerow(csv_row)
             self.current_sweep_csv.flush()
+        
     
-
-
-
-
-            
-
-
-    # def init_serial(self):
-    #     try:
-    #         self.ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2)
-    #         print("Serial connected")
-    
-    #         # Force Teensy reset (non-blocking, very short)
-    #         self.ser.setDTR(False)
-    #         time.sleep(0.05)
-    #         self.ser.setDTR(True)
-    
-    #     except Exception as e:
-    #         print(f"Serial init failed: {e}")
-    #         self.ser = None
     def init_serial(self):
+        # code for specifying the PORT to use
+        # try:
+        #     self.ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2)
+        #     print("Serial connected")
+    
+        #     # Force Teensy reset (non-blocking, very short)
+        #     self.ser.setDTR(False)
+        #     time.sleep(0.05)
+        #     self.ser.setDTR(True)
+    
+        # except Exception as e:
+        #     print(f"Serial init failed: {e}")
+        #     self.ser = None
         try:
             port = None
             for p in list_ports.comports():
@@ -483,7 +569,8 @@ class LivePlotter(QtWidgets.QMainWindow):
         header = ["SWEEP_IDX", "POINT", "TIME", "V_GATE"] \
                 + [f"I_CH{i}" for i in range(N_CHANNELS)] \
                 + ["DIRAC_SWEEP_IDX"] \
-                + [f"DIRAC_V_CH{i}" for i in range(N_CHANNELS)]
+                + [f"DIRAC_V_FWD_CH{i}" for i in range(N_CHANNELS)] \
+                + [f"DIRAC_V_REV_CH{i}" for i in range(N_CHANNELS)]
         
         self.csv_writer.writerow(header)
         print(f"CSV file created: {path}")
@@ -493,6 +580,16 @@ class LivePlotter(QtWidgets.QMainWindow):
     # -----------------------------
     # Plot update (FAST)
     # -----------------------------
+    def toggle_dirac_fwd(self, checked):
+        self.show_dirac_fwd = checked
+        for curve in self.dirac_curves_fwd:
+            curve.setVisible(self.show_dirac_fwd)
+    
+    def toggle_dirac_rev(self, checked):
+        self.show_dirac_rev = checked
+        for curve in self.dirac_curves_rev:
+            curve.setVisible(self.show_dirac_rev)
+
     def update_plot(self):
         x_np = np.array(self.x)
 
@@ -504,10 +601,23 @@ class LivePlotter(QtWidgets.QMainWindow):
             if visible:
                 self.curves[i].setData(x_np, self.y[i])
 
+            # self.dirac_curves_fwd[i].setVisible(
+            #     self.channel_enabled[i].isChecked()
+            # )
 
-            self.dirac_curves[i].setVisible(
-                self.channel_enabled[i].isChecked()
+            # self.dirac_curves_rev[i].setVisible(
+            #     self.channel_enabled[i].isChecked()
+            # )
+            self.dirac_curves_fwd[i].setVisible(
+                self.channel_enabled[i].isChecked() and self.show_dirac_fwd
             )
+            
+            self.dirac_curves_rev[i].setVisible(
+                self.channel_enabled[i].isChecked() and self.show_dirac_rev
+            )
+
+
+    
 
     def update_legend(self):
         # Show/hide pre-created rows based on checkbox state
