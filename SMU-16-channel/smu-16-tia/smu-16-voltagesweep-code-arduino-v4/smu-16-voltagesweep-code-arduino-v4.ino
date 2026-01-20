@@ -19,7 +19,7 @@ float gate_end_voltage = 1.0; // maximum value is 1.8 [-1 * offset_voltage_tia +
 float R_f = 15000; // negative feedback resistor for transimpedance aplifier
 
 float sweep_delay_ms = 100; // 0.1s=100ms
-const float mux_delay_ms = 1; // 0.001s=100ms
+const float mux_delay_ms = 5; // 0.005s=5ms
 int sweep_num_steps = (int)((gate_end_voltage - gate_start_voltage) * 100); // 100 times as many points, per volt, so 1V/100=10mV per division regardless of end voltage
 int step_number = 0; // keeps track of current sweep step
 
