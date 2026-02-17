@@ -60,12 +60,12 @@ class LivePlotter(QtWidgets.QMainWindow):
         control.addWidget(stop_btn)
 
         control.addWidget(QtWidgets.QLabel("Gate Voltage (V)"))
-        self.gate_box = QtWidgets.QLineEdit("-0.3")
+        self.gate_box = QtWidgets.QLineEdit("0")
         self.gate_box.setFixedWidth(80)
         control.addWidget(self.gate_box)
 
         control.addWidget(QtWidgets.QLabel("Sample Delay (ms)"))
-        self.delay_box = QtWidgets.QLineEdit("100")
+        self.delay_box = QtWidgets.QLineEdit("50")
         self.delay_box.setFixedWidth(80)
         control.addWidget(self.delay_box)
 

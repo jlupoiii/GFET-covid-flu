@@ -14,8 +14,8 @@ float offset_voltage_tia = 1.5;     // TIA offset
 float gate_fixed_voltage = 0.0;     // FIXED gate voltage (set on start)
 float R_f = 15000;                  // TIA feedback resistor
 
-float sweep_delay_ms = 100;         // sampling period
-const float mux_delay_ms = 10;
+float sweep_delay_ms = 50;         // sampling period
+const float mux_delay_ms = 5;
 
 bool sweeping = false;
 bool run_started = false;

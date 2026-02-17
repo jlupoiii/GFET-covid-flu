@@ -71,8 +71,8 @@ class LivePlotter(QtWidgets.QMainWindow):
         
         gate_range_layout = QtWidgets.QHBoxLayout()
         
-        self.vmin_box = QtWidgets.QLineEdit("-0.5")  # default min
-        self.vmax_box = QtWidgets.QLineEdit("1.5")   # default max
+        self.vmin_box = QtWidgets.QLineEdit("0")  # default min
+        self.vmax_box = QtWidgets.QLineEdit("1.0")   # default max
         
         self.vmin_box.setFixedWidth(60)
         self.vmax_box.setFixedWidth(60)
@@ -87,7 +87,7 @@ class LivePlotter(QtWidgets.QMainWindow):
         # Sweep delay input button, step delay
         control.addWidget(QtWidgets.QLabel("Sweep Delay (ms)"))
         
-        self.sweep_delay_box = QtWidgets.QLineEdit("100")  # default 100 ms
+        self.sweep_delay_box = QtWidgets.QLineEdit("50")  # default 50 ms
         self.sweep_delay_box.setFixedWidth(80)
         control.addWidget(self.sweep_delay_box)
 

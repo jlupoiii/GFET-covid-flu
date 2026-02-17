@@ -72,8 +72,8 @@ class LivePlotter(QtWidgets.QMainWindow):
         # Gate voltage range
         control.addWidget(QtWidgets.QLabel("Gate Voltage Range (V)"))
         gate_layout = QtWidgets.QHBoxLayout()
-        self.vmin_box = QtWidgets.QLineEdit("-0.5")
-        self.vmax_box = QtWidgets.QLineEdit("1.5")
+        self.vmin_box = QtWidgets.QLineEdit("0")
+        self.vmax_box = QtWidgets.QLineEdit("1.0")
         self.vmin_box.setFixedWidth(60)
         self.vmax_box.setFixedWidth(60)
         gate_layout.addWidget(self.vmin_box)
@@ -83,7 +83,7 @@ class LivePlotter(QtWidgets.QMainWindow):
 
         # Sweep delay
         control.addWidget(QtWidgets.QLabel("Sweep Delay (ms)"))
-        self.sweep_delay_box = QtWidgets.QLineEdit("100")
+        self.sweep_delay_box = QtWidgets.QLineEdit("50")
         self.sweep_delay_box.setFixedWidth(80)
         control.addWidget(self.sweep_delay_box)
 
