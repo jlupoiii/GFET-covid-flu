@@ -83,7 +83,7 @@ class LivePlotter(QtWidgets.QMainWindow):
 
         # Sweep delay
         control.addWidget(QtWidgets.QLabel("Sweep Delay (ms)"))
-        self.sweep_delay_box = QtWidgets.QLineEdit("50")
+        self.sweep_delay_box = QtWidgets.QLineEdit("1")
         self.sweep_delay_box.setFixedWidth(80)
         control.addWidget(self.sweep_delay_box)
 
@@ -105,7 +105,7 @@ class LivePlotter(QtWidgets.QMainWindow):
         control.addWidget(QtWidgets.QLabel("Y Limits (µA)"))
         ylayout = QtWidgets.QHBoxLayout()
         self.ymin_box = QtWidgets.QLineEdit("0")
-        self.ymax_box = QtWidgets.QLineEdit("100")
+        self.ymax_box = QtWidgets.QLineEdit("25")
         self.ymin_box.setFixedWidth(60)
         self.ymax_box.setFixedWidth(60)
         self.ymin_box.returnPressed.connect(self.apply_ylims)
@@ -130,7 +130,7 @@ class LivePlotter(QtWidgets.QMainWindow):
         self.plot = pg.PlotWidget()
         self.plot.setLabel("bottom", "Gate Voltage (V)")
         self.plot.setLabel("left", "Drain Current (µA)")
-        self.plot.setYRange(0, 100)
+        self.plot.setYRange(0, 25)
         self.plot.getAxis("bottom").enableAutoSIPrefix(False)
         layout.addWidget(self.plot, 1)
 
@@ -471,9 +471,9 @@ class LivePlotter(QtWidgets.QMainWindow):
                 dirac_v = ""
             else:
                 y = np.array(self.y[ch])
-                x = np.array(self.x)                
+                x = np.array(self.x)  
                 min_idx_fwd = np.argmin(np.abs(y[:len(y)//2]))
-                min_idx_rev = np.argmin(np.abs(y[len(y)//2:]))
+                min_idx_rev = np.argmin(np.abs(y[len(y)//2:])) + len(y)//2 # to acount for that we are looking at the second half of the y-list
                 dirac_v_fwd = x[min_idx_fwd]
                 dirac_v_rev = x[min_idx_rev]
     
@@ -682,6 +682,17 @@ class LivePlotter(QtWidgets.QMainWindow):
 
         self.plot.setXRange(vmin, vmax, padding=0)
         self.plot.enableAutoRange(axis='x', enable=False)
+
+
+        # auto scale the dirac plot to the right
+        self.dirac_plot.enableAutoRange(axis='y', enable=True)
+        self.dirac_plot.enableAutoRange(axis='x', enable=True)
+
+
+        
+
+
+        
 
             
     def save_image(self):

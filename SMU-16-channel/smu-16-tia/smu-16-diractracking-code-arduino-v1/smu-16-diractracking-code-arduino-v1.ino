@@ -19,12 +19,12 @@ float gate_end_voltage = 1.0; // maximum value is 1.8 [-1 * offset_voltage_tia +
 float R_f = 15000; // negative feedback resistor for transimpedance aplifier
 
 float sweep_delay_ms = 50; // 0.05s=50ms
-const float mux_delay_ms = 5; // 0.005s=5ms
-int sweep_num_steps = (int)((gate_end_voltage - gate_start_voltage) * 100); // 100 times as many points, per volt, so 1V/100=10mV per division regardless of end voltage
+const float mux_delay_ms = 1; // 0.001s=1ms
+int sweep_num_steps = (int)((gate_end_voltage - gate_start_voltage) * 500); // 500 times as many points, per volt, so 1V/500=2mV per division regardless of end voltage
 int step_number = 0; // keeps track of current sweep step
 
 bool sweeping = false; // true or false depeding on when measurements are actively being taken
-bool run_started = false; // for setting start time 
+bool run_started = false; // for setting start time
 float start_time_s; // the time at which the measurements begin 
 
 
@@ -97,7 +97,6 @@ void loop() {
         gate_end_voltage   = cmd.substring(i2 + 1, i3).toFloat();
         sweep_delay_ms     = cmd.substring(i3 + 1).toFloat();
     
-        sweep_num_steps = int((gate_end_voltage - gate_start_voltage) * 100);
       }
     
     } else if (cmd == "stop") {
@@ -158,7 +157,7 @@ void loop() {
   Serial.print(", ");
   Serial.print(millis()/1000.0 - start_time_s, 3);
   Serial.print(", ");
-  Serial.print(gate_voltage, 2);
+  Serial.print(gate_voltage, 6);
 
 
   // delay between gate voltage sweeps, to let the new gate voltage settle
