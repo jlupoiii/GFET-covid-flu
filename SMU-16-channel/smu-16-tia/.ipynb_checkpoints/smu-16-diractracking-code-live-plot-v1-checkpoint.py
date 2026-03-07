@@ -684,9 +684,14 @@ class LivePlotter(QtWidgets.QMainWindow):
         self.plot.enableAutoRange(axis='x', enable=False)
 
 
-        # auto scale the dirac plot to the right
-        self.dirac_plot.enableAutoRange(axis='y', enable=True)
-        self.dirac_plot.enableAutoRange(axis='x', enable=True)
+        # # auto scale the dirac plot to the right
+        # self.dirac_plot.enableAutoRange(axis='y', enable=True)
+        # self.dirac_plot.enableAutoRange(axis='x', enable=True)
+        self.dirac_plot.autoRange()
+        
+        # Turn autorange back off so toggling curves doesn't move the axes
+        self.dirac_plot.enableAutoRange(axis='x', enable=False)
+        self.dirac_plot.enableAutoRange(axis='y', enable=False)
 
 
         
