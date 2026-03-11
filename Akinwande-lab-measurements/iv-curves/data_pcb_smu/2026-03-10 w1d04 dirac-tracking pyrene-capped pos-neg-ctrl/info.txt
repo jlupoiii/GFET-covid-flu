@@ -1,0 +1,40 @@
+pyrene-capped oligos in 1X PBS
+4 hours ddt
+overnight pyrene-capped oligos
+tracking dirac curves (dirac pt, etc), not time-series tests
+func started on 3/10/26, analyte tested on 3/11
+
+same func as 2026-03-05, but 4 hours ddt instead of 2
+
+4 wells are separated with acrylic wells. Wells tested with analyte separately. Data channels are as follows:
+
+The analytes are tested in wells:
+(1): Pos ctrl, complement oligo
+(2): NONE
+(3): Neg ctrl, scrambled oligo
+(4): 1X PBS blank
+
+The respective channels are:
+(1): 6, 8, 11, 13, 14, 15
+(2): NONE
+(3): 0, 1, 2, 4, 5
+(4): 3, 7, 9, 10, 12
+
+    TOP
+-----------
+| (1)|(2) |
+-----|----|
+| (4)|(3) | 
+-----------
+
+
+Volumes and concentrations used:
+functionalization:
+    2mM DDT, 4 hours
+    5uM pyrene-capped oligos, overnight
+analyte:
+    1aM, 100aM, 10fM, 1pM, 100pM, 10nM, 1uM
+    Starting with 40uL in each well
+    Adding 2uL to each well every analyte step, without replacement
+
+
