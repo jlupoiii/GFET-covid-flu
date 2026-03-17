@@ -20,7 +20,9 @@ float R_f = 15000; // negative feedback resistor for transimpedance aplifier
 
 float sweep_delay_ms = 50; // 0.05s=50ms
 const float mux_delay_ms = 1; // 0.001s=1ms
-int sweep_num_steps = (int)((gate_end_voltage - gate_start_voltage) * 500); // 500 times as many points, per volt, so 1V/500=2mV per division regardless of end voltage
+int sweep_num_steps;
+int gate_voltage_res;
+//int sweep_num_steps = (int)((gate_end_voltage - gate_start_voltage) * 500); // 500 times as many points, per volt, so 1V/500=2mV per division regardless of end voltage
 int step_number = 0; // keeps track of current sweep step
 
 bool sweeping = false; // true or false depeding on when measurements are actively being taken
@@ -91,12 +93,16 @@ void loop() {
       int i1 = cmd.indexOf(',');
       int i2 = cmd.indexOf(',', i1 + 1);
       int i3 = cmd.indexOf(',', i2 + 1);
+      int i4 = cmd.indexOf(',', i3 + 1);
     
-      if (i1 > 0 && i2 > i1 && i3 > i2) {
+      if (i1 > 0 && i2 > i1 && i3 > i2 && i4 > i3) {
         gate_start_voltage = cmd.substring(i1 + 1, i2).toFloat();
         gate_end_voltage   = cmd.substring(i2 + 1, i3).toFloat();
-        sweep_delay_ms     = cmd.substring(i3 + 1).toFloat();
-    
+        sweep_delay_ms     = cmd.substring(i3 + 1, i4).toFloat();
+        gate_voltage_res   = cmd.substring(i4 + 1).toFloat();
+        
+        sweep_num_steps = (int)((gate_end_voltage - gate_start_voltage) * gate_voltage_res);
+
       }
     
     } else if (cmd == "stop") {

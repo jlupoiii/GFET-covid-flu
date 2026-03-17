@@ -34,7 +34,13 @@ functionalization:
     5uM pyrene-capped oligos, overnight
 analyte:
     1aM, 100aM, 10fM, 1pM, 100pM, 10nM, 1uM
-    Starting with 40uL in each well
-    Adding 2uL to each well every analyte step, without replacement
+    Starting with 30uL in each well
+    Adding 3uL to each well every analyte step, without replacement
+    Add concentration every 30mins incubate 15mins + take measurements ~15mins
+
+
+
+
+FIGURE OUT WHICH STEP I DID 2X BY ACCIDENT - ITS EITHER 10F OR 1P
 
 

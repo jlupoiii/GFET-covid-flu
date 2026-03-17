@@ -81,7 +81,13 @@ class LivePlotter(QtWidgets.QMainWindow):
         gate_layout.addWidget(self.vmax_box)
         control.addLayout(gate_layout)
 
-        # Sweep delay
+        # Gate Voltage resolution
+        control.addWidget(QtWidgets.QLabel("Gate V. Resolution (pts/V)"))
+        self.gate_v_res_box = QtWidgets.QLineEdit("100")
+        self.gate_v_res_box.setFixedWidth(80)
+        control.addWidget(self.gate_v_res_box)
+
+        # Sweep delay 
         control.addWidget(QtWidgets.QLabel("Sweep Delay (ms)"))
         self.sweep_delay_box = QtWidgets.QLineEdit("1")
         self.sweep_delay_box.setFixedWidth(80)
@@ -324,6 +330,25 @@ class LivePlotter(QtWidgets.QMainWindow):
                     "Sweep delay must be between 0 and 5000 ms."
                 )
                 return
+
+
+
+            # Validate gate voltage resolution input
+            try:
+                gate_v_res = float(self.gate_v_res_box.text())
+            except ValueError:
+                QtWidgets.QMessageBox.critical(
+                    self, "Input Error", "Gate voltage resolution must be an integer (points/Volt)."
+                )
+                return
+        
+            if gate_v_res <= 10 or gate_v_res > 2000:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    "Input Error",
+                    "Sweep delay must be between 10 and 2000 points/Volt."
+                )
+                return
     
             # Clear live sweep graph and prepare x and y values
             self.x.clear()
@@ -339,7 +364,7 @@ class LivePlotter(QtWidgets.QMainWindow):
 
 
             # Send start command
-            self.send_serial(f"start,{vmin},{vmax},{sweep_delay_ms}")
+            self.send_serial(f"start,{vmin},{vmax},{sweep_delay_ms},{gate_v_res}")
             sweep_completed = False
     
             # -----------------------------
@@ -601,13 +626,6 @@ class LivePlotter(QtWidgets.QMainWindow):
             if visible:
                 self.curves[i].setData(x_np, self.y[i])
 
-            # self.dirac_curves_fwd[i].setVisible(
-            #     self.channel_enabled[i].isChecked()
-            # )
-
-            # self.dirac_curves_rev[i].setVisible(
-            #     self.channel_enabled[i].isChecked()
-            # )
             self.dirac_curves_fwd[i].setVisible(
                 self.channel_enabled[i].isChecked() and self.show_dirac_fwd
             )
@@ -684,19 +702,12 @@ class LivePlotter(QtWidgets.QMainWindow):
         self.plot.enableAutoRange(axis='x', enable=False)
 
 
-        # # auto scale the dirac plot to the right
-        # self.dirac_plot.enableAutoRange(axis='y', enable=True)
-        # self.dirac_plot.enableAutoRange(axis='x', enable=True)
+        # auto scale the dirac plot to the right
         self.dirac_plot.autoRange()
-        
-        # Turn autorange back off so toggling curves doesn't move the axes
-        self.dirac_plot.enableAutoRange(axis='x', enable=False)
-        self.dirac_plot.enableAutoRange(axis='y', enable=False)
-
+        self.dirac_plot.enableAutoRange(axis='y', enable=True)
+        self.dirac_plot.enableAutoRange(axis='x', enable=True)
 
         
-
-
         
 
             
