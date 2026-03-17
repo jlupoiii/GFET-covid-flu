@@ -84,6 +84,13 @@ class LivePlotter(QtWidgets.QMainWindow):
         control.addLayout(gate_range_layout)
 
 
+        # Gate Voltage resolution
+        control.addWidget(QtWidgets.QLabel("Gate V. Resolution (pts/V)"))
+        self.gate_v_res_box = QtWidgets.QLineEdit("100")
+        self.gate_v_res_box.setFixedWidth(80)
+        control.addWidget(self.gate_v_res_box)
+
+
         # Sweep delay input button, step delay
         control.addWidget(QtWidgets.QLabel("Sweep Delay (ms)"))
         
@@ -300,6 +307,8 @@ class LivePlotter(QtWidgets.QMainWindow):
             )
             return
 
+            
+
         # Validate step delay input
         try:
             sweep_delay_ms = float(self.sweep_delay_box.text())
@@ -317,6 +326,23 @@ class LivePlotter(QtWidgets.QMainWindow):
             )
             return
 
+        # Validate gate voltage resolution input
+        try:
+            gate_v_res = float(self.gate_v_res_box.text())
+        except ValueError:
+            QtWidgets.QMessageBox.critical(
+                self, "Input Error", "Gate voltage resolution must be an integer (points/Volt)."
+            )
+            return
+    
+        if gate_v_res <= 10 or gate_v_res > 2000:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Input Error",
+                "Sweep delay must be between 10 and 2000 points/Volt."
+            )
+            return
+        
         
         # Clear data
         self.x.clear()
@@ -348,7 +374,9 @@ class LivePlotter(QtWidgets.QMainWindow):
         self.init_serial()
     
         # Send start command
-        self.send_serial(f"start,{vmin},{vmax},{sweep_delay_ms}")
+        # self.send_serial(f"start,{vmin},{vmax},{sweep_delay_ms}")
+        self.send_serial(f"start,{vmin},{vmax},{sweep_delay_ms},{gate_v_res}")
+
 
 
         self.sweep_running = True
