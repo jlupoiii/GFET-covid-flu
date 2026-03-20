@@ -4,14 +4,20 @@ import csv
 import serial
 from serial.tools import list_ports
 import numpy as np
+import os
 
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtGui
 import pyqtgraph as pg
 from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtGui import QPixmap
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from PyQt5.QtCore import Qt
+import os
+
+import ctypes
+
+
 
 
 # -----------------------------
@@ -27,6 +33,11 @@ class LivePlotter(QtWidgets.QMainWindow):
         super().__init__()
         self.setWindowTitle("SMU Channel Plotter (pyqtgraph)")
         self.resize(1600, 800)
+
+        # sets the window icon to my own picture
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        icon_path = os.path.join(script_dir, "gfet_image.png")
+        self.setWindowIcon(QtGui.QIcon(icon_path))
 
         # -----------------------------
         # Data buffers
@@ -736,6 +747,10 @@ class LivePlotter(QtWidgets.QMainWindow):
 # RUN
 # -----------------------------
 if __name__ == "__main__":
+    myappid = "gfet.liveplotter.v1"  # any unique string
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
+
     app = QtWidgets.QApplication(sys.argv)
     win = LivePlotter()
     win.show()

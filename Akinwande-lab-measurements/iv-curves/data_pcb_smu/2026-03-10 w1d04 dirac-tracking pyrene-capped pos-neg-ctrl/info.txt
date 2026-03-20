@@ -2,6 +2,7 @@ pyrene-capped oligos in 1X PBS
 4 hours ddt
 overnight pyrene-capped oligos
 tracking dirac curves (dirac pt, etc), not time-series tests
+    used 500 pts/V divisions for dirac tracking
 func started on 3/10/26, analyte tested on 3/11
 
 same func as 2026-03-05, but 4 hours ddt instead of 2
@@ -41,6 +42,8 @@ analyte:
 
 
 
-FIGURE OUT WHICH STEP I DID 2X BY ACCIDENT - ITS EITHER 10F OR 1P
+Overall, this func looked very bad. No trends are visible
+
+
 
 

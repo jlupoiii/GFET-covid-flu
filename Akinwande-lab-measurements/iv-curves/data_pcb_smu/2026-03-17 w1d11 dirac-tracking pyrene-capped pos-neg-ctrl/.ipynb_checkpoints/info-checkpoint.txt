@@ -1,0 +1,56 @@
+Device 11 (tested Device 13 the same time as this)
+This is the same experiment as from 3/10/26 with pos, neg, and blank cotrls, but slightly different:
+    Shorter DDT incubation from 3/10/26 (4hrs -> 2hrs)
+    Analyte testing started with 20uL (not 30uL from 3/10/26)
+    Slightly different channel nums
+
+pyrene-capped oligos in 1X PBS
+2 hours ddt
+overnight pyrene-capped oligos
+tracking dirac curves (dirac pt, etc), not time-series tests
+    used 500 pts/V divisions for dirac tracking
+func started on 3/17/26, analyte tested on 3/18/26
+
+
+4 wells are separated with acrylic wells. Wells tested with analyte separately. Data channels are as follows:
+
+The analytes are tested in wells:
+(1): NONE
+(2): Neg ctrl, scrambled oligo
+(3): 1X PBS blank
+(4): Pos ctrl, complement oligo
+
+The respective channels are:
+(1): NONE
+(2): 1, 5, 8, 11, 14, 15
+(3): 0, 2, 4, 6
+(4): 3, 7, 9, 10, 12, 13
+
+The following wells went bad: 0
+
+    TOP
+-----------
+| (1)|(2) |
+-----|----|
+| (4)|(3) | 
+-----------
+
+
+Volumes and concentrations used:
+functionalization:
+    2mM DDT, 2 hours
+    5uM pyrene-capped oligos, overnight
+analyte:
+    1aM, 100aM, 10fM, 1pM, 100pM, 10nM, 1uM
+    Starting with 20uL in each well
+    Adding 3uL to each well every analyte step, without replacement
+    Add concentration every 30mins incubate 15mins + take measurements ~15mins
+
+
+Overall this one did not look well. The neg control decreased, the blank rose linearly more than the pos control. This was due to an uneven functionalization. The DDT in each well shifted the dirac point to shift in an unequal amount. Next test will try without DDT. Also a problem counld have come from the analyte solution evaporating. Over ~5 hours, I was not replacing the solution and it nearly all evaporated by the end. This will increase the PBS concentration since salt does not evaporate.
+
+
+
+
+
+

@@ -1,0 +1,63 @@
+Device 6
+This is a similar experiment as from 3/17/26 with pos, neg, and blank ctrls, but 2 diferences different:
+    1) No DDT incubation - did this because the dirac point was going way negative and each well was being funtionalized differently causing different hill curves. Like comparing apples and oranges here...
+    2) Analyte NOT added cumulatively to the well. Add a conc, incubate, measure, take out soln, add next conc, ... repeat (no wash with PBS, just next soln)
+
+pyrene-capped oligos in 1X PBS overnight
+tracking dirac curves (dirac pt, etc), not time-series tests
+    used 500 pts/V divisions for dirac tracking
+func started on 3/18/26, analyte tested on 3/19/26
+
+
+4 wells are separated with acrylic wells. Wells tested with analyte separately. Data channels are as follows:
+
+The analytes are tested in wells:
+(1): NONE
+(2): Pos ctrl, complement oligo
+(3): 1X PBS blank
+(4): Neg ctrl, scrambled oligo
+
+The respective channels are:
+(1): NONE
+(2): 1, 3, 4, 8, 9, 15
+(3): 0, 2, 6, 7, 10
+(4): 5, 10, 11, 12, 13, 14
+
+The following wells went bad: NONE went bad!
+
+    TOP
+-----------
+| (1)|(2) |
+-----|----|
+| (4)|(3) | 
+-----------
+
+
+Volumes and concentrations used:
+functionalization:
+    5uM pyrene-capped oligos, overnight
+analyte:
+    1aM, 100aM, 10fM, 1pM, 100pM, 10nM, 1uM
+    Replaced solution at every concentration, 50uL in every well
+    Took measurements with the current concentration in the well (not 1X PBS)
+    Add concentration every 45mins; incubate 30mins + take measurements ~15mins
+
+
+
+The results look bad, all channels follow the same upward trend between the pos, neg, and blank ctrl. The functionalization looked all even this time, which is good. Also I see a plateau which is consistent with the Portugal PBS conc paper (https://www.mdpi.com/2079-6374/11/1/24), I just don't have good negative controls. Next time, I am going to try functionalization not using the pre-attached pyrene group to the oligo, and go for the PBASE linker method. Refer to this paper to see how they did it in the past, for oligo concentrations and PBASE functionalization: https://www.mdpi.com/2079-6374/11/1/24. Look to dopamine paper for PBASE functionalization as well: https://www.mdpi.com/2079-6374/11/1/24. Things that could be going wrong / thoughts:
+
+(1) Primarily, I think that the pyrene attachment is not working at all. I NEED to try PBASE method to see if this sees better control (DDT - PBASE - oligo - ETA 8pH). This is what I will do next. Make sure I am washing the wells between.
+
+(2) If the pre-attached pyrene group is truly a possible method, what could be going wrong is that I am not washing the wells correctly. I need to wash with 1X PBS after incubation, fill with 1X PBS, then do measurement WITHOUT any analyte in the solution. The way I did it now would allow analyte to settle to the bottom during incubation and the stay there during measurement. I didn't have any washing step. However, this does not explain the blank controls.
+
+(3) Could be that drift is too much - even the blank is increasing, so this might mean that the channel naturally drifts
+
+(4) All Portugal Alpuim papers do DDT between 4 and 16 hours, some 2mM some 10mM. Do I need to get DDT to work?
+
+(5) Going straight from DDT to capture oligo can be bad. Ethanol (and IPA) make DNA precipitate, so if not all ethanol gone after ddt, then it is a high change that capture DNA curls up and does not bind to the graphene surface. The PBASE and DMF/DMSO in between DDT and oligo is good because this serves as a buffer between ethanol and oligos. DMF/DMSO are compaible with DNA and they remove 2ndary structures from DNA so it is unraveled and does not precipitate between these 2 consecutive steps. Also ethanol dissolves in DMF/DMSO so this removes all the remaining ethanol from the wells!
+
+
+
+NEXT STEP: PBASE FUNCTIONALIZATION, with correct washing (incubate - wash - measure - next incubation)
+
+
