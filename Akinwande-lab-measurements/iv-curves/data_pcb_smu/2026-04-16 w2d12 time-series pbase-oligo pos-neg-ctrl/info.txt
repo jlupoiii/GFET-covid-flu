@@ -1,0 +1,85 @@
+transc at 0.75ish, took measurment at 0.75
+
+
+Wafer 2 Device 12
+
+Using PBASE linking instead of pyrene-capped oligo, Since there is no shift due to pyrene-capped oligos. This has pos, neg, and blank ctrls. Important to note that 
+    1) Used newly opened PBASE container from freezer (purchased a long time ago though)
+    2) Did only 1X PBS baseline and 1uM saturating, not all 7 concnetrations
+    3) Took dirac measurements with the analyte solution in the well; no washing before
+    4) 1X PBS used was purchased, NOT self-made wth tablets
+    5) Skipped dirac measurement between PBASE and oligo to minimize NHS ester hydrolization / PBASE contact with 1X PBS due to short half life of NHS ester
+
+amine-capped oligos in 1X PBS overnight
+tracking dirac curves (dirac pt, etc), not time-series tests
+    Used 500 pts/V divisions for dirac tracking
+    Sweeps are 0.3V - 1.3V for fnctionalization
+    Transcunductance point at ~0.75V for fully functionalized chip (bad...)
+func started on 4/16/26, analyte tested on 4/17/26
+
+4 wells are separated with Polypropylene (PP) wells, because DMSO damages acrylic. Wells tested with analyte separately. Data channels are as follows:
+
+The analytes are tested in wells:
+(1): Neg ctrl, scrambled oligo
+(2): Blank, 1X PBS
+(3): Pos ctrl, complement oligo
+(4): NONE
+
+The respective channels are:
+(1): 8,9,12,13,14,15
+(2): 0,1,6,10,11 - only did time measurement on this well
+(3): 2,3,4,5,7
+(4): NONE
+
+The following wells went bad: NONE!
+
+    TOP
+-----------
+| (1)|(2) |
+-----|----|
+| (4)|(3) | 
+-----------
+
+
+Volumes and concentrations used:
+functionalization:
+    DDT 2mM in ethanol, 2 hours
+    PBASE 10mM in DMSO, 2 hours
+    10uM amine-capped oligos, overnight
+    (not ETA)
+analyte:
+    1aM, 100aM, 10fM, 1pM, 100pM, 10nM, 1uM
+    Trnasconductance point set at 0.75V
+    Started with 25uL in well 
+    Added 2uL of each analyte at a time
+    Started with scrambled (-), and then went to complement (+). This pattern alternated S(-) C(+) S(-) C(+) ...., starting at small concs then icnreasing
+    Replaced solution at every concentration, 50uL in every well. Analyte NOT added cumulatively to the well. Add a conc, incubate, rinse, measure, take out soln, add next conc, ... repeat
+
+
+
+
+
+
+(see other functionalization folder done today - w2d15) The functionalization looks weird again. The DDT shows P-doping, but every time before this is was N-type doping. As deigned, there was no measurement between the PBASE and the amine-capped oligo. Similar to the last experiment with this wafer, after the oligo there was very little positive shift from the DDT, but the magnidude of the dirac point was more (+) compared to the previous PBASE experiment. It looked like little P-doping, though, because the DDT had such high P-doping.
+
+This high dirac point and weird DDT step tells me that the wafer is probably bad.
+
+The time test looks bad. there is no change in baseline current when either analyte is added
+
+Things that could have gone wrong:
+(1) I think the wafer is bad. The dirac point starts at 0.8V, but I want it at ~0.4V. This needs to be changed.
+(2) Again, the PBASE could have hydrolyzed. I used the newly opened bottle, but this bottle is ~1 year old, so it could have gone bad. This issue is secondary to the bad wafer though
+(3) Maybe the debye layer is too small. Do experiment with 0.01X PBS instead becuse this consistently gave good results.
+
+NEXT STEP (same as noted in w2d15 info): 
+-try new wafer - this is the number 1 suspicion
+-Don't do all 7 concentrations, go for baseline and 1uM only
+-Same functionalization process though, since it looked unlike what previous ones looked like, espcially DDT (PBASE functionalization, with store-bought 1X PBS, skipping dirac measurement between PBASE and oligo).
+-in parallel, try 0.01X PBS instead of 1X PBS
+-also the PBASE might be old - replace this and buy a new one
+
+
+
+
+
+

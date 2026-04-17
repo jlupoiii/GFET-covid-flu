@@ -1,0 +1,73 @@
+Wafer 2 Device 16
+This is the second experiment using PBASE linking instead of pyrene-capped oligo, Since there is no shift due to pyrene-capped oligos. This has pos, neg, and blank ctrls. Important to note that 
+    1) 1X PBS used was purchased, NOT self-made wth tablets
+    2) Skipped dirac measurement between PBASE and oligo to minimize NHS ester hydrolization / PBASE contact with 1X PBS due to short half life of NHS ester
+
+amine-capped oligos in 1X PBS overnight
+tracking dirac curves (dirac pt, etc), not time-series tests
+    Used 500 pts/V divisions for dirac tracking
+    Sweeps are 0.3V - 1.3V
+func started on 4/7/26, analyte tested on 4/8/26
+
+4 wells are separated with Polypropylene (PP) wells, because DMSO damages acrylic. Wells tested with analyte separately. Data channels are as follows:
+
+The analytes are tested in wells:
+(1): Neg ctrl, scrambled oligo
+(2): Blank, 1X PBS
+(3): Pos ctrl, complement oligo
+(4): NONE
+
+The respective channels are:
+(1): 8,9,12,13,14,15
+(2): 0,1,6,10,11
+(3): 2,3,4,5,7
+(4): NONE
+
+The following wells went bad:
+
+    TOP
+-----------
+| (1)|(2) |
+-----|----|
+| (4)|(3) | 
+-----------
+
+
+Volumes and concentrations used:
+functionalization:
+    DDT 2mM in ethanol, 2 hours
+    PBASE 10mM in DMOS, 2 hours
+    10uM amine-capped oligos, overnight
+    (not ETA)
+analyte:
+    1aM, 100aM, 10fM, 1pM, 100pM, 10nM, 1uM
+    Replaced solution at every concentration, 50uL in every well. Analyte NOT added cumulatively to the well. Add a conc, incubate, rinse, measure, take out soln, add next conc, ... repeat
+    Took measurements with the current concentration in the well (not 1X PBS)
+    Add concentration every 45mins; incubate 30mins + take measurements ~15mins
+
+
+
+
+The functionalization looks weird. The DDT shows P-doping, but every time before this is was N-type doping. As deigned, there was no measurement between the PBASE and the amine-capped oligo. After the oligo, there was very little positive shift from the DDT, but the magnidude of the dirac point was more (+) compared to the previous PBASE experiment. It looked like little P-doping, though, because the DDT had such high P-doping. I'd like to run this again.
+
+There was a short between the drains of well (1), channels 8, 9, 12, 13, 14, so they all shared the exact same curve. This is bad, even though it looks like low variance. At first it looks good because it looks consistent, but it just means that the transistors share the same channel(s)
+
+The concentration curve looks bad, all (+), (-), and (0) ctrls show the same flat trend.
+
+Things that could have gone wrong:
+(1) Again, the PBASE could have hydrolyzed. This bottle of PBASE is ~1 year old, so it could have gone bad. I'd like to try and use a new bottle. We have 1 unopened bottle, I should also order another.
+(2) The way I am taking measurements can be affecting the steady state dirac points. Right now I start at a fast measurement of gate voltage 100 pts/volt, then after ~6 sweeps I go to the slower 500 pts/volt for less discreteness. But when I switch to 500pts/volt seems to stabilize quickly. Does it stabilize at whaever point I switch at? If so I need to stop switching from 100 to 500. Or does the 500 just have slower drift? This would be a difficult issue to track. I need to stick with one and stay. 100 is good for quickness and tracking drift quickly but I don't get the continuity I like. 500 is good to minimize discreteness but it is super slow, and might not track drift. I'm leaning towards doing the 100
+(3) The device could be falling apart over time. It takes about 5 hours to do this, but what if there are too many sweeps being taken causing graphene quality to go down, or bioreceptors fall off, or contamination over time. I shold try just 2 measurements. A baseline with 1X PBS, then an hour incubation straight to 1uM. This will give a response and save time. This can confirm functionalization wasy without the 5 hour day. I could also functionalize like 5 chips and do them all in a day easy. This will be just to show proof of concept, and will return to the full concentration curves once this is shown.
+(4) I wash out the well with 1X PBS before taking measurments, and this could be washing out all the molecules. Aptamers grab and release - this is SUPER inportant. If no washing and taking measurements in the soln with analyte causes a curve to arise, then it could mean oligo is depositing on the surface. Right now with the washing the concentration curve is flat. The washing step SHOULD be waching away the unbound analyte and keep the bound, but maybe this is not working and the boud analyte becomes unbound. 
+(5) Maybe the debye layer is too small. Do experiment with 0.01X PBS instead becuse this consistently gave good results.
+
+NEXT STEP: 
+-Don't do all 7 concentrations, go for baseline and 1uM only
+-Same functionalization process though, since it looked unlike what previous ones looked like, espcially DDT (PBASE functionalization, with store-bought 1X PBS, skipping dirac measurement between PBASE and oligo).
+- in the future: in parallel, try 0.01X PBS instead of 1X PBS
+-ALSO the PBASE might be old - replace this
+-Do not wash before dirac measurements, take measurement with analyte solution in well
+
+
+
+

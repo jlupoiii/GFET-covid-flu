@@ -1,0 +1,62 @@
+Wafer 2 Device 13
+This is the first experiment using PBASE linking instead of pyrene-capped oligo, Since there is no shift due to pyrene-capped oligos. This has pos, neg, and blank ctrls. Important to note that 
+    1) Analyte NOT added cumulatively to the well. Add a conc, incubate, rinse, measure, take out soln, add next conc, ... repeat
+    2) 1X PBS used was made with tablets, not with purchased 1X PBS
+
+amine-capped oligos in 1X PBS overnight
+tracking dirac curves (dirac pt, etc), not time-series tests
+    Used 500 pts/V divisions for dirac tracking
+    Sweeps are 0.3V - 1.0V
+func started on 3/31/26, analyte tested on 4/1/26
+
+
+4 wells are separated with Polypropylene (PP) wells, because DMSO damages acrylic. Wells tested with analyte separately. Data channels are as follows:
+
+The analytes are tested in wells:
+(1): Pos ctrl, complement oligo
+(2): 1X PBS blank
+(3): Neg ctrl, scrambled oligo
+(4): NONE
+
+The respective channels are:
+(1): 8,9,12,13,14,15
+(2): 0,1,6,10,11
+(3): 2,3,4,5,7
+(4): NONE
+
+The following wells went bad: 2, 11
+
+    TOP
+-----------
+| (1)|(2) |
+-----|----|
+| (4)|(3) | 
+-----------
+
+
+Volumes and concentrations used:
+functionalization:
+    DDT 2mM in ethanol, 2 hours
+    PBASE 10mM in DMOS, 2 hours
+    10uM amine-capped oligos, overnight
+    (not ETA)
+analyte:
+    1aM, 100aM, 10fM, 1pM, 100pM, 10nM, 1uM
+    Replaced solution at every concentration, 50uL in every well
+    Took measurements with the current concentration in the well (not 1X PBS)
+    Add concentration every 45mins; incubate 30mins + take measurements ~15mins
+
+
+
+The results look bad, all channels follow the same FLAT trend between the pos, neg, and blank ctrl. The functionalization looked all even this time, which is good. Notably, the functionalization does not look good after the PBASE step. there is not P-doping after the oligos are incubated. This leads me to believe that the oligo are not attaching to the NHS ester on the PBASE. It is good that all the wells are FLAT because if there is capture oligo, then the baseline is establishe well and all the unbound oligos are washing off effectively. What I think went wrong:
+
+(1) I think the NHS ester on the PBASE hydrolyzed. The halflife of NHS ester is 10-30 mins in 1X PBS and the dirac measurment took ~15 mins between the PBASE and oligo incubation. Also the half life of NHS ester decreases as the pH of 1X PBS goes up.
+
+To fix this, 
+(1) I will be using store-bought 1X PBS instead of the self-made tablet 1X PBS, since this controls the pH more. I could have had a super high pH and had no idea, contributing to the hydrolization. 
+(2) I will be skipping the dirac measurement step between the PBASE and the oligo measurement to decrease the time that NHS ester is in contact with 1X PBS. The 15 mins to measure could be killing it. I won't have this characterization, which is bad because I won't be able to track the doping, but this is necessary to eliminate this factor. I can try to see the final shift to confirm attachment, or look at the concentration curves (obviously)
+
+
+NEXT STEP: PBASE functionalization, with store-bought 1X PBS, skipping dirac measurement between PBASE and oligo
+
+
