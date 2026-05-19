@@ -1,0 +1,71 @@
+Wafer 3 Device 6
+
+Using 0.01X PBS for analytes, and PBASE linking. This has pos, neg, and blank ctrls. Important to note that 
+    1) Platinum electrodes, not gold electrodes for wafer 3
+    1) Used 0.01X PBS for the analytes (kept 1X PBS for functionalization)
+    2) Used newly opened PBASE container from freezer (purchased a long time ago though)
+    3) Did only 0.01X PBS baseline and 1uM saturating, not all 7 concnetrations
+    4) Took dirac measurements with the analyte solution in the well; no washing before
+    5) 1X PBS used was purchased, NOT self-made wth tablets
+    6) Skipped dirac measurement between PBASE and oligo to minimize NHS ester hydrolization / PBASE contact with 1X PBS due to short half life of NHS ester
+
+amine-capped oligos in 1X PBS overnight
+tracking dirac curves (dirac pt, etc), not time-series tests
+    Used 500 pts/V divisions for dirac tracking
+    Sweeps are 0.3V - 1.3V
+func started on 5/14/26, analyte tested on 4/17/26
+
+4 wells are separated with Polypropylene (PP) wells, because DMSO damages acrylic. Wells tested with analyte separately. Data channels are as follows:
+
+The analytes are tested in wells:
+(1): Pos ctrl, complement oligo
+(2): Blank, 1X PBS
+(3): Neg ctrl, scrambled oligo
+(4): NONE
+
+
+The respective channels for each well are:
+(1): 8,9,12,13,14,15
+(2): 0,1,6,10,11
+(3): 2,3,4,5,7
+(4): NONE
+
+The following wells went bad: 0,1,2,3,4,7,11,15
+
+    TOP
+-----------
+| (1)|(2) |
+-----|----|
+| (4)|(3) | 
+-----------
+
+
+Volumes and concentrations used:
+functionalization:
+    PBASE 10mM in DMSO, 2 hours
+    10uM amine-capped oligos, overnight
+    (no DDT or ETA)
+analyte:
+    1uM
+    Replaced solution at every concentration, 50uL in every well. Analyte NOT added cumulatively to the well. Add a conc, incubate, measure, take out soln, add next conc, ... repeat
+    Took measurements with the current concentration in the well (not 1X PBS)
+
+
+The functionalizatioon looks bad, there is no observable shift. The initial dirac point is at ~1.1V - which is VERY BAD. We want ~0.4V. Therefore the wafer is probably bad. The concentration curve also looks bad, all (+), (-), and (0) are very close to the starting baseline.
+
+Things that could have gone wrong:
+(1) I think the wafer is bad. The dirac point starts at 1.1V, but I want it at ~0.4V. This needs to be changed. It is likely due to the AlOx annealing step, this needs to be elinimated. Running material sample tests very soon to change the AlOx annealing conditions.
+[
+(2) Again, the PBASE could have hydrolyzed. I used the newly opened bottle, but this bottle is ~1 year old, so it could have gone bad. This issue is secondary to the bad wafer though
+(3) The 2-stage measurememt between baseline and saturating 1uM still looked bad, so this tells me that the 5 hour long nature of the long experiment isn't nevessarily bad (yet).
+]
+
+NEXT STEP: 
+-try new wafer,  - this is the number 1 suspicion
+-Continue not doing all 7 concentrations, go for baseline and 1uM only
+-Continue trying 0.01X PBS (instead of 1X PBS)
+-also the PBASE might be old - new one is coming!
+
+
+
+
