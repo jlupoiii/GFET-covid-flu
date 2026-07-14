@@ -18,8 +18,6 @@ import os
 import ctypes
 
 
-
-
 # -----------------------------
 # CONFIG
 # -----------------------------
@@ -47,12 +45,11 @@ class LivePlotter(QtWidgets.QMainWindow):
         self.sweep_running = False
         self.sweep_index = 0
 
-
         # Dirac tracking per channel
         # -----------------------------
         self.dirac_times = [[] for _ in range(N_CHANNELS)]
-        self.dirac_vals_fwd  = [[] for _ in range(N_CHANNELS)]
-        self.dirac_vals_rev  = [[] for _ in range(N_CHANNELS)]
+        self.dirac_vals_fwd = [[] for _ in range(N_CHANNELS)]
+        self.dirac_vals_rev = [[] for _ in range(N_CHANNELS)]
         self.dirac_curves_fwd = []
         self.dirac_curves_rev = []
 
@@ -70,11 +67,13 @@ class LivePlotter(QtWidgets.QMainWindow):
         layout.addLayout(control, 0)
 
         start_btn = QtWidgets.QPushButton("Start Sweep")
-        start_btn.setStyleSheet("background-color: green; color: white; font-weight: bold;")
+        start_btn.setStyleSheet(
+            "background-color: green; color: white; font-weight: bold;")
         start_btn.clicked.connect(self.start_sweep)
 
         stop_btn = QtWidgets.QPushButton("Stop Sweep")
-        stop_btn.setStyleSheet("background-color: red; color: white; font-weight: bold;")
+        stop_btn.setStyleSheet(
+            "background-color: red; color: white; font-weight: bold;")
         stop_btn.clicked.connect(self.stop_sweep)
 
         control.addWidget(start_btn)
@@ -98,7 +97,7 @@ class LivePlotter(QtWidgets.QMainWindow):
         self.gate_v_res_box.setFixedWidth(80)
         control.addWidget(self.gate_v_res_box)
 
-        # Sweep delay 
+        # Sweep delay
         control.addWidget(QtWidgets.QLabel("Sweep Delay (ms)"))
         self.sweep_delay_box = QtWidgets.QLineEdit("1")
         self.sweep_delay_box.setFixedWidth(80)
@@ -169,8 +168,6 @@ class LivePlotter(QtWidgets.QMainWindow):
         layout.addWidget(self.legend_widget, 0)
         label = QtWidgets.QLabel("   Legend   ")
 
-
-
         # Dirac visibility toggles
         dirac_btn_style = """
         QPushButton {
@@ -191,27 +188,29 @@ class LivePlotter(QtWidgets.QMainWindow):
         self.btn_dirac_rev = None
         self.show_dirac_fwd = True
         self.show_dirac_rev = True
-        self.btn_dirac_fwd = QtWidgets.QPushButton("FWD Dirac Pt (\u25CF)") # ● \u25CF # circle
+        self.btn_dirac_fwd = QtWidgets.QPushButton(
+            "FWD Dirac Pt (\u25CF)")  # ● \u25CF # circle
         self.btn_dirac_fwd.setCheckable(True)
         self.btn_dirac_fwd.setChecked(True)
         self.btn_dirac_fwd.setStyleSheet(dirac_btn_style)
         self.btn_dirac_fwd.clicked.connect(self.toggle_dirac_fwd)
-        
-        self.btn_dirac_rev = QtWidgets.QPushButton("REV Dirac Pt (\u25B6)") # ▶  \u25B6 # right-facing triangle
+
+        self.btn_dirac_rev = QtWidgets.QPushButton(
+            "REV Dirac Pt (\u25B6)")  # ▶  \u25B6 # right-facing triangle
         self.btn_dirac_rev.setCheckable(True)
         self.btn_dirac_rev.setChecked(True)
         self.btn_dirac_rev.setStyleSheet(dirac_btn_style)
         self.btn_dirac_rev.clicked.connect(self.toggle_dirac_rev)
-        
+
         self.legend_panel.addWidget(self.btn_dirac_fwd)
         self.legend_panel.addWidget(self.btn_dirac_rev)
 
-        
         # RIGHT: Legend, resumed
         label.setStyleSheet("color: white; font-weight: bold;")
         self.legend_panel.addWidget(label)
 
-        self.channel_colors = [pg.intColor(i, hues=N_CHANNELS) for i in range(N_CHANNELS)]
+        self.channel_colors = [pg.intColor(
+            i, hues=N_CHANNELS) for i in range(N_CHANNELS)]
         self.legend_rows = []
 
         for i in range(N_CHANNELS):
@@ -220,12 +219,14 @@ class LivePlotter(QtWidgets.QMainWindow):
             row_layout.setContentsMargins(0, 0, 0, 0)
 
             lbl = QtWidgets.QLabel(f"Ch {i}")
-            lbl.setStyleSheet(f"color: {self.channel_colors[i].name()}; font-weight: bold;")
+            lbl.setStyleSheet(
+                f"color: {self.channel_colors[i].name()}; font-weight: bold;")
             row_layout.addWidget(lbl)
 
             line = QtWidgets.QFrame()
             line.setFrameShape(QtWidgets.QFrame.HLine)
-            line.setStyleSheet(f"background-color: {self.channel_colors[i].name()};")
+            line.setStyleSheet(
+                f"background-color: {self.channel_colors[i].name()};")
             row_layout.addWidget(line, 1)
 
             self.legend_panel.addWidget(row)
@@ -242,14 +243,12 @@ class LivePlotter(QtWidgets.QMainWindow):
             self.curves.append(curve)
 
         self.dirac_curves_fwd = [self.dirac_plot.plot([], [], pen=self.channel_colors[i], symbol="o",
-                                                           symbolBrush=self.channel_colors[i])
-                                     for i in range(N_CHANNELS)]
+                                                      symbolBrush=self.channel_colors[i])
+                                 for i in range(N_CHANNELS)]
 
         self.dirac_curves_rev = [self.dirac_plot.plot([], [], pen=self.channel_colors[i], symbol="t2",
-                                                           symbolBrush=self.channel_colors[i])
-                                     for i in range(N_CHANNELS)]
-
-        
+                                                      symbolBrush=self.channel_colors[i])
+                                 for i in range(N_CHANNELS)]
 
         # =============================
         # CSV + Serial
@@ -263,17 +262,16 @@ class LivePlotter(QtWidgets.QMainWindow):
 
 ###############################
 
-
     # -----------------------------
     # Sweep Functions
     # -----------------------------
+
     def start_sweep(self):
 
         # Ignore if a sweep is already running
         if self.sweep_running:
             print("Sweep already running - Start ignored")
             return
-
 
         # ------------
         # CSV setup
@@ -283,7 +281,7 @@ class LivePlotter(QtWidgets.QMainWindow):
             self.current_sweep_csv.close()
             self.current_sweep_csv = None
             self.csv_writer = None
-        
+
         # CSV for new sweeps
         if not self.setup_csv():
             print("CSV save canceled")
@@ -296,7 +294,6 @@ class LivePlotter(QtWidgets.QMainWindow):
         if not self.ser or not self.ser.is_open:
             self.init_serial()
 
-
         # Clear Dirac tracking
         for ch in range(N_CHANNELS):
             self.dirac_times[ch].clear()
@@ -304,13 +301,11 @@ class LivePlotter(QtWidgets.QMainWindow):
             self.dirac_vals_rev[ch].clear()
             self.dirac_curves_fwd[ch].setData([], [])
             self.dirac_curves_rev[ch].setData([], [])
-            
 
-        
-        self.sweep_running = True    
+        self.sweep_running = True
         self.experiment_start_time = time.time()
         self.sweep_index = 0
-        
+
         while self.sweep_running:
             # Validate gate voltage inputs
             try:
@@ -318,13 +313,13 @@ class LivePlotter(QtWidgets.QMainWindow):
                 vmax = float(self.vmax_box.text())
             except ValueError:
                 print("Input Error", "Gate voltages must be numbers.")
-    
+
             if vmin < -1.5 or vmax > 1.5 or vmin >= vmax:
                 print("Gate voltages must satisfy:\n-1.5 ≤ min < max ≤ 1.5")
 
             self.plot.setXRange(vmin, vmax, padding=0)
             self.plot.enableAutoRange(axis='x', enable=False)
-    
+
             # Validate step delay input
             try:
                 sweep_delay_ms = float(self.sweep_delay_box.text())
@@ -333,7 +328,7 @@ class LivePlotter(QtWidgets.QMainWindow):
                     self, "Input Error", "Sweep delay must be a number (ms)."
                 )
                 return
-        
+
             if sweep_delay_ms <= 0 or sweep_delay_ms > 5000:
                 QtWidgets.QMessageBox.critical(
                     self,
@@ -341,8 +336,6 @@ class LivePlotter(QtWidgets.QMainWindow):
                     "Sweep delay must be between 0 and 5000 ms."
                 )
                 return
-
-
 
             # Validate gate voltage resolution input
             try:
@@ -352,7 +345,7 @@ class LivePlotter(QtWidgets.QMainWindow):
                     self, "Input Error", "Gate voltage resolution must be an integer (points/Volt)."
                 )
                 return
-        
+
             if gate_v_res <= 10 or gate_v_res > 2000:
                 QtWidgets.QMessageBox.critical(
                     self,
@@ -360,24 +353,23 @@ class LivePlotter(QtWidgets.QMainWindow):
                     "Sweep delay must be between 10 and 2000 points/Volt."
                 )
                 return
-    
+
             # Clear live sweep graph and prepare x and y values
             self.x.clear()
             for ch in self.y:
                 ch.clear()
 
-    
             # -----------------------------
             # Prepare Dirac curve for this sweep
             # -----------------------------
             # Sweep start time
             self.current_sweep_start_time = time.time()
 
-
             # Send start command
-            self.send_serial(f"start,{vmin},{vmax},{sweep_delay_ms},{gate_v_res}")
+            self.send_serial(
+                f"start,{vmin},{vmax},{sweep_delay_ms},{gate_v_res}")
             sweep_completed = False
-    
+
             # -----------------------------
             # Blocking read loop
             # -----------------------------
@@ -386,31 +378,31 @@ class LivePlotter(QtWidgets.QMainWindow):
                 if not line:
                     print('Serial info not complete, received', line)
                     continue
-    
+
                 if line == "DONE":
                     sweep_completed = True
                     break
-    
+
                 parts = line.split(",")
                 if len(parts) != 19:
                     # sweep_completed = True
                     print('Serial info not complete, received', line)
                     continue
-    
+
                 step = int(parts[0])
                 t = float(parts[1])
                 vg = float(parts[2])
                 currents = list(map(float, parts[3:]))
-    
+
                 self.x.append(vg)
                 for i in range(N_CHANNELS):
                     self.y[i].append(currents[i] * 1e6)
-                        
-    
+
                 # write to CSV
-                self.csv_writer.writerow([self.sweep_index, step, t, vg] + currents)
+                self.csv_writer.writerow(
+                    [self.sweep_index, step, t, vg] + currents)
                 self.current_sweep_csv.flush()
-    
+
                 self.update_plot()
                 QtWidgets.QApplication.processEvents()
 
@@ -442,31 +434,30 @@ class LivePlotter(QtWidgets.QMainWindow):
                 self.ser.flush()  # ensure the command is sent
             except Exception as e:
                 print("Error sending stop:", e)
-            
+
             # Close the serial connection
             try:
                 self.ser.close()
                 print("Serial connection closed")
             except Exception as e:
                 print("Error closing serial:", e)
-        
+
         # Optional: clear serial object so it can be reopened later
         self.ser = None
-
 
     def compute_and_plot_dirac(self):
         """
         Compute Dirac point for each channel for the current sweep,
         append them to the tracking lists, and write a row to the CSV
         with empty strings for the sweep point data columns.
-        """        
+        """
         # # Time since the start of the experiment (not just this sweep)
         # t = time.time() - self.experiment_start_time
-    
+
         # # Compute Dirac points for all channels
         # dirac_row = [""] * (4 + N_CHANNELS)  # Placeholder for SWEEP_IDX, POINT, TIME, V_GATE, I_CH0..15
         # dirac_values = []
-    
+
         # for ch in range(N_CHANNELS):
         #     print(len(self.x))
         #     if len(self.x) < 2:
@@ -476,19 +467,19 @@ class LivePlotter(QtWidgets.QMainWindow):
         #         x = np.array(self.x)
         #         min_idx = np.argmin(np.abs(y))
         #         dirac_v = x[min_idx]
-    
+
         #     # Store for tracking
         #     self.dirac_times[ch].append(t)
         #     self.dirac_vals[ch].append(dirac_v)
 
         #     # Update Dirac curve
         #     self.dirac_curves[ch].setData(self.dirac_times[ch], self.dirac_vals[ch])
-    
+
         #     dirac_values.append(dirac_v)
-    
+
         # # Build the CSV row: first columns are sweep point placeholders, last columns are Dirac points
         # csv_row = dirac_row + [self.sweep_index] + dirac_values
-    
+
         # # Write to CSV
         # if self.current_sweep_csv:
         #     self.csv_writer.writerow(csv_row)
@@ -496,57 +487,60 @@ class LivePlotter(QtWidgets.QMainWindow):
 
         # Time since the start of the experiment (not just this sweep)
         t = time.time() - self.experiment_start_time
-    
+
         # Compute Dirac points for all channels
-        dirac_row = [""] * (4 + N_CHANNELS)  # Placeholder for SWEEP_IDX, POINT, TIME, V_GATE, I_CH0..15
+        # Placeholder for SWEEP_IDX, POINT, TIME, V_GATE, I_CH0..15
+        dirac_row = [""] * (4 + N_CHANNELS)
         dirac_values_fwd = []
         dirac_values_rev = []
-    
+
         for ch in range(N_CHANNELS):
             if len(self.x) < 2:
                 dirac_v = ""
             else:
                 y = np.array(self.y[ch])
-                x = np.array(self.x)  
+                x = np.array(self.x)
                 min_idx_fwd = np.argmin(np.abs(y[:len(y)//2]))
-                min_idx_rev = np.argmin(np.abs(y[len(y)//2:])) + len(y)//2 # to acount for that we are looking at the second half of the y-list
+                # to acount for that we are looking at the second half of the y-list
+                min_idx_rev = np.argmin(np.abs(y[len(y)//2:])) + len(y)//2
                 dirac_v_fwd = x[min_idx_fwd]
                 dirac_v_rev = x[min_idx_rev]
-    
+
             # Store for tracking
             self.dirac_times[ch].append(t)
             self.dirac_vals_fwd[ch].append(dirac_v_fwd)
             self.dirac_vals_rev[ch].append(dirac_v_rev)
-            
 
             # WILL THIS MESS STUFF UP???
             # Update Dirac curve
-            self.dirac_curves_fwd[ch].setData(self.dirac_times[ch], self.dirac_vals_fwd[ch])
-            self.dirac_curves_rev[ch].setData(self.dirac_times[ch], self.dirac_vals_rev[ch])
-        
+            self.dirac_curves_fwd[ch].setData(
+                self.dirac_times[ch], self.dirac_vals_fwd[ch])
+            self.dirac_curves_rev[ch].setData(
+                self.dirac_times[ch], self.dirac_vals_rev[ch])
+
             dirac_values_fwd.append(dirac_v_fwd)
             dirac_values_rev.append(dirac_v_rev)
-    
+
         # Build the CSV row: first columns are sweep point placeholders, last columns are Dirac points
-        csv_row = dirac_row + [self.sweep_index] + dirac_values_fwd + dirac_values_rev
-    
+        csv_row = dirac_row + [self.sweep_index] + \
+            dirac_values_fwd + dirac_values_rev
+
         # Write to CSV
         if self.current_sweep_csv:
             self.csv_writer.writerow(csv_row)
             self.current_sweep_csv.flush()
-        
-    
+
     def init_serial(self):
         # code for specifying the PORT to use
         # try:
         #     self.ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=2)
         #     print("Serial connected")
-    
+
         #     # Force Teensy reset (non-blocking, very short)
         #     self.ser.setDTR(False)
         #     time.sleep(0.05)
         #     self.ser.setDTR(True)
-    
+
         # except Exception as e:
         #     print(f"Serial init failed: {e}")
         #     self.ser = None
@@ -556,18 +550,18 @@ class LivePlotter(QtWidgets.QMainWindow):
                 if p.vid == 0x16C0:  # Teensy
                     port = p.device
                     break
-    
+
             if port is None:
                 raise RuntimeError("Teensy not found")
-    
+
             self.ser = serial.Serial(port, BAUD_RATE, timeout=2)
             print(f"Serial connected on {port}")
-    
+
             # Reset Teensy
             self.ser.setDTR(False)
             time.sleep(0.05)
             self.ser.setDTR(True)
-    
+
         except Exception as e:
             print(f"Serial init failed: {e}")
             self.ser = None
@@ -584,43 +578,43 @@ class LivePlotter(QtWidgets.QMainWindow):
         except Exception as e:
             print(f"Error sending {msg}: {e}")
 
-
     def setup_csv(self):
         dialog = QFileDialog(self, "Save CSV")
         dialog.setAcceptMode(QFileDialog.AcceptSave)
         dialog.setNameFilter("CSV Files (*.csv)")
         dialog.setOptions(QFileDialog.DontUseNativeDialog)
-        dialog.setWindowFlags(dialog.windowFlags() | Qt.WindowStaysOnTopHint)  # force on top
-    
+        dialog.setWindowFlags(dialog.windowFlags() |
+                              Qt.WindowStaysOnTopHint)  # force on top
+
         if dialog.exec_() == QFileDialog.Accepted:
             path = dialog.selectedFiles()[0]
             if not path.lower().endswith(".csv"):
                 path += ".csv"
         else:
             return False
-    
+
         self.csv_file = open(path, "w", newline="")
         self.csv_writer = csv.writer(self.csv_file)
-    
+
         header = ["SWEEP_IDX", "POINT", "TIME", "V_GATE"] \
-                + [f"I_CH{i}" for i in range(N_CHANNELS)] \
-                + ["DIRAC_SWEEP_IDX"] \
-                + [f"DIRAC_V_FWD_CH{i}" for i in range(N_CHANNELS)] \
-                + [f"DIRAC_V_REV_CH{i}" for i in range(N_CHANNELS)]
-        
+            + [f"I_CH{i}" for i in range(N_CHANNELS)] \
+            + ["DIRAC_SWEEP_IDX"] \
+            + [f"DIRAC_V_FWD_CH{i}" for i in range(N_CHANNELS)] \
+            + [f"DIRAC_V_REV_CH{i}" for i in range(N_CHANNELS)]
+
         self.csv_writer.writerow(header)
         print(f"CSV file created: {path}")
         return True
 
-
     # -----------------------------
     # Plot update (FAST)
     # -----------------------------
+
     def toggle_dirac_fwd(self, checked):
         self.show_dirac_fwd = checked
         for curve in self.dirac_curves_fwd:
             curve.setVisible(self.show_dirac_fwd)
-    
+
     def toggle_dirac_rev(self, checked):
         self.show_dirac_rev = checked
         for curve in self.dirac_curves_rev:
@@ -631,7 +625,7 @@ class LivePlotter(QtWidgets.QMainWindow):
 
         for i in range(N_CHANNELS):
             visible = self.channel_enabled[i].isChecked()
-    
+
             # Live sweep
             self.curves[i].setVisible(visible)
             if visible:
@@ -640,13 +634,10 @@ class LivePlotter(QtWidgets.QMainWindow):
             self.dirac_curves_fwd[i].setVisible(
                 self.channel_enabled[i].isChecked() and self.show_dirac_fwd
             )
-            
+
             self.dirac_curves_rev[i].setVisible(
                 self.channel_enabled[i].isChecked() and self.show_dirac_rev
             )
-
-
-    
 
     def update_legend(self):
         # Show/hide pre-created rows based on checkbox state
@@ -655,7 +646,7 @@ class LivePlotter(QtWidgets.QMainWindow):
                 row.show()
             else:
                 row.hide()
-            
+
     def toggle_all(self):
         state = not self.channel_enabled[0].isChecked()
         for cb in self.channel_enabled:
@@ -686,7 +677,7 @@ class LivePlotter(QtWidgets.QMainWindow):
                     ymin = ch_min
                 if ymax is None or ch_max > ymax:
                     ymax = ch_max
-    
+
         # If we found any data, apply limits
         if ymin is not None and ymax is not None:
             margin = 0.05 * (ymax - ymin)  # optional 5% padding
@@ -697,7 +688,6 @@ class LivePlotter(QtWidgets.QMainWindow):
             # Update the boxes
             self.ymin_box.setText(f"{ymin:.2f}")
             self.ymax_box.setText(f"{ymax:.2f}")
-
 
         # Validate gate voltage inputs and set the x axis
         try:
@@ -712,16 +702,11 @@ class LivePlotter(QtWidgets.QMainWindow):
         self.plot.setXRange(vmin, vmax, padding=0)
         self.plot.enableAutoRange(axis='x', enable=False)
 
-
         # auto scale the dirac plot to the right
         self.dirac_plot.autoRange()
         self.dirac_plot.enableAutoRange(axis='y', enable=True)
         self.dirac_plot.enableAutoRange(axis='x', enable=True)
 
-        
-        
-
-            
     def save_image(self):
         # Ask user where to save
         filename, _ = QFileDialog.getSaveFileName(
@@ -742,7 +727,6 @@ class LivePlotter(QtWidgets.QMainWindow):
         event.accept()
 
 
-        
 # -----------------------------
 # RUN
 # -----------------------------
@@ -750,14 +734,7 @@ if __name__ == "__main__":
     myappid = "gfet.liveplotter.v1"  # any unique string
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
-
     app = QtWidgets.QApplication(sys.argv)
     win = LivePlotter()
     win.show()
     sys.exit(app.exec_())
-
-
-
-
-
-
