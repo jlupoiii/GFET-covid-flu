@@ -97,11 +97,12 @@ class LivePlotter(QtWidgets.QMainWindow):
         self.gate_v_res_box.setFixedWidth(80)
         control.addWidget(self.gate_v_res_box)
 
-        # Sweep delay
-        control.addWidget(QtWidgets.QLabel("Sweep Delay (ms)"))
-        self.sweep_delay_box = QtWidgets.QLineEdit("1")
-        self.sweep_delay_box.setFixedWidth(80)
-        control.addWidget(self.sweep_delay_box)
+        # PART OF DELAY CODE
+        # # Sweep delay 
+        # control.addWidget(QtWidgets.QLabel("Sweep Delay (ms)"))
+        # self.sweep_delay_box = QtWidgets.QLineEdit("1")
+        # self.sweep_delay_box.setFixedWidth(80)
+        # control.addWidget(self.sweep_delay_box)
 
         # Channel toggles
         control.addWidget(QtWidgets.QLabel("Toggle Channels"))
@@ -320,22 +321,23 @@ class LivePlotter(QtWidgets.QMainWindow):
             self.plot.setXRange(vmin, vmax, padding=0)
             self.plot.enableAutoRange(axis='x', enable=False)
 
-            # Validate step delay input
-            try:
-                sweep_delay_ms = float(self.sweep_delay_box.text())
-            except ValueError:
-                QtWidgets.QMessageBox.critical(
-                    self, "Input Error", "Sweep delay must be a number (ms)."
-                )
-                return
-
-            if sweep_delay_ms <= 0 or sweep_delay_ms > 5000:
-                QtWidgets.QMessageBox.critical(
-                    self,
-                    "Input Error",
-                    "Sweep delay must be between 0 and 5000 ms."
-                )
-                return
+            # PART OF DELAY CODE
+            # # Validate step delay input
+            # try:
+            #     sweep_delay_ms = float(self.sweep_delay_box.text())
+            # except ValueError:
+            #     QtWidgets.QMessageBox.critical(
+            #         self, "Input Error", "Sweep delay must be a number (ms)."
+            #     )
+            #     return
+        
+            # if sweep_delay_ms < 0 or sweep_delay_ms > 1000:
+            #     QtWidgets.QMessageBox.critical(
+            #         self,
+            #         "Input Error",
+            #         "Sweep delay must be between 0 and 1000 ms."
+            #     )
+            #     return
 
             # Validate gate voltage resolution input
             try:
@@ -350,7 +352,7 @@ class LivePlotter(QtWidgets.QMainWindow):
                 QtWidgets.QMessageBox.critical(
                     self,
                     "Input Error",
-                    "Sweep delay must be between 10 and 2000 points/Volt."
+                    "Voltage separation must be between 10 and 2000 points/Volt."
                 )
                 return
 
@@ -366,8 +368,8 @@ class LivePlotter(QtWidgets.QMainWindow):
             self.current_sweep_start_time = time.time()
 
             # Send start command
-            self.send_serial(
-                f"start,{vmin},{vmax},{sweep_delay_ms},{gate_v_res}")
+            sweep_delay_ms = 0 # PART OF DELAT CODE - THIS IS TEMPORARY TO GET RID OF DEPENDENCIES
+            self.send_serial(f"start,{vmin},{vmax},{sweep_delay_ms},{gate_v_res}")
             sweep_completed = False
 
             # -----------------------------

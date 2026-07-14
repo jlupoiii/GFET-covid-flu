@@ -18,8 +18,8 @@ float gate_start_voltage = 0; // minimum value is -1.5 [-1 * offset_voltage_tia]
 float gate_end_voltage = 1.0; // maximum value is 1.8 [-1 * offset_voltage_tia + 3.3] // default value, will be overridden by python serial inuput
 float R_f = 15000; // negative feedback resistor for transimpedance aplifier
 
-float sweep_delay_ms = 50; // 0.05s=50ms
-const float mux_delay_ms = 1; // 0.001s=1ms
+float sweep_delay_ms = 0; // 0.05s=50ms           // PART OF DELAY CODE
+const float mux_delay_ms = 0; // 0.001s=1ms       // PART OF DELAY CODE
 int sweep_num_steps;
 int gate_voltage_res;
 //int sweep_num_steps = (int)((gate_end_voltage - gate_start_voltage) * 500); // 500 times as many points, per volt, so 1V/500=2mV per division regardless of end voltage
@@ -113,27 +113,6 @@ void loop() {
   }
   if (!sweeping) return;
   
- /////////////////////////////////////////////////////// code for only forward curve
-//  // Stop loop once we’ve reached the final step
-//  if (step_number >= sweep_num_steps) {
-//    Serial.println("DONE");
-//    sweeping = false;
-//    step_number = 0;
-//    return;
-//  }
-////   Log the step number(frame num), time elapsed since the start of the test, and the drain voltage (constant)
-//  Serial.print(step_number);
-//  Serial.print(", ");
-//  Serial.print(millis()/1000.0 - start_time_s, 3);
-//  Serial.print(", ");
-//
-//  // calculate gate voltage based on the step number, set the gate voltage, and log it
-//  float gate_voltage = gate_start_voltage + (gate_end_voltage - gate_start_voltage) * (float(step_number) / sweep_num_steps);
-//  set_gate_voltage(gate_voltage);
-//  Serial.print(gate_voltage, 2);
-////  Serial.print(", ");
-//////////////////////////////////////////////////////
-
 
   // Stop loop once we’ve reached the final step
   // calculate gate voltage based on the step number, set the gate voltage, and log it
@@ -166,16 +145,16 @@ void loop() {
   Serial.print(gate_voltage, 6);
 
 
-  // delay between gate voltage sweeps, to let the new gate voltage settle
-  delay(sweep_delay_ms);
+//  // delay between gate voltage sweeps, to let the new gate voltage settle    // PART OF DELAY CODE
+//  delay(sweep_delay_ms);                                                      // PART OF DELAY CODE
 
   // Read all 16 mux channels
   for (int ch = 0; ch < num_channels_drain; ch++) {
     
     select_drain_mux_channel(ch);
     
-    // let signal between mux channels settle with small delay
-    delay(mux_delay_ms);
+//    // let signal between mux channels settle with small delay                // PART OF DELAY CODE
+//    delay(mux_delay_ms);                                                      // PART OF DELAY CODE
     
     float opamp_output_voltage =  read_adc(0);
     float current = (offset_voltage_tia - opamp_output_voltage) / R_f; // for R_f, negative feedback resistor
