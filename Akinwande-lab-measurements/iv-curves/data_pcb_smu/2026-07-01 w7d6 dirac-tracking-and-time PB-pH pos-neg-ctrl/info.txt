@@ -1,0 +1,45 @@
+Wafer 7 Device 6
+
+pH test to confirm that the dirac point moves
+
+Using 100mM PB (phosphate buffer), NOT PBS. Used Phosphoric acid to make solutions more acidic, and NaOH to make the solutions more basic
+
+No functionalization
+Tracking dirac curves (dirac pt, etc), not time-series tests
+    Used 500 pts/V divisions for dirac tracking
+    Sweeps are 0 to 1V
+
+Testing took one day, 7/1/26
+
+
+The analytes are tested in wells:
+(1): Blank, 100mM PB
+(2): Blank, 100mM PB
+(3): Pos ctrl, varying pH's
+(4): NONE
+
+
+The respective channels for each well are:
+(1): 8,9,12,13,14,15
+(2): 0,1,6,10,11
+(3): 2,3,4,5,7
+(4): NONE
+
+The following wells went bad: 5, 7, 8, 9, 11, 12, 10, 0, 1, 6 (many of them... it was an iffy chip)
+
+    TOP
+-----------
+| (1)|(2) |
+-----|----|
+| (4)|(3) | 
+-----------
+
+pH's tested:
+    3,4,5,6,7,8,9,10
+    Did not incubate the solutions. Took measurements immediately
+    50uL in every well
+    Only replaced the solutions from the varyine pH well. DID NOT replace the blank controls
+
+
+This looked great! The very first concentration curve we have in this project. Also the blank control had pretty mch zero drift over the ~3 hours of this experiment. In the future, to confirm no drift from blank controls, make sure to switch out solution in blank well too. This was not very robust of me...
+

@@ -1,0 +1,56 @@
+Wafer 7 Device 3
+
+Using 0.01X PBS for analytes, and PBASE linking. This has pos, neg, and blank ctrls. Important to note that 
+    1) Used 0.01X PBS for the analytes (kept 1X PBS for functionalization)
+    2) Took dirac measurements with the analyte solution in the well; no washing before
+    3) 1X PBS used was purchased, NOT self-made wth tablets
+
+amine-capped oligos in 1X PBS overnight
+tracking dirac curves (dirac pt, etc), not time-series tests
+    Used 500 pts/V divisions for dirac tracking
+    Sweeps are 0 to 1V
+func started on 7/1/26, analyte tested on 7/2/26
+
+
+The analytes are tested in wells:
+(1): Pos ctrl, complement oligo
+(2): Blank, 0.01X PBS
+(3): Neg ctrl, scrambled oligo
+(4): NONE
+
+
+The respective channels for each well are:
+(1): 8,9,12,13,14,15
+(2): 0,1,6,10,11
+(3): 2,3,4,5,7
+(4): NONE
+
+The following wells went bad: 15, 5, 2, 6
+
+    TOP
+-----------
+| (1)|(2) |
+-----|----|
+| (4)|(3) | 
+-----------
+
+
+Volumes and concentrations used:
+functionalization:
+    PBASE 10mM in DMSO, 2 hours
+    10uM amine-capped oligos, overnight
+    (no DDT or ETA)
+analyte:
+    1aM, 100aM, 10fM, 1pM, 100pM, 10nM, 1uM
+    Replaced solution at every concentration, 50uL in every well. Analyte NOT added cumulatively to the well. Add a conc, incubate, measure, take out soln, add next conc, ... repeat
+    Took measurements with the current concentration in the well
+
+
+The positive, negative, and 0.01X Blank controls all move together, so there is drift (because blank drifts too).
+
+What could have gone wrong: 
+1) PBASE is not washed off enough
+2) PBASE's NHS ester is hydrolyzing
+3) Oligos are bad because we freeze and thaw them >30 times
+
+

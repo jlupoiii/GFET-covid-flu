@@ -1,0 +1,72 @@
+Wafer 7 Device 12 - Drift test, nanobody vs bare graphene
+
+Using 0.01X PBS for analytes, PBASE linking, and NANOBODIES (wildtype) (first time!!!!). This has pos and blank ctrls () no negative control. Important to note that 
+    1) NO HEXAPRO in any wells, this was strictly done with no analyte
+    1) Used 0.01X PBS for the analytes (kept 1X PBS for functionalization)
+    2) used new PBASE opened 7/6/26
+    3) Skipped PBASE dirac sweep
+    4) Rigorous washing was done, washed after PBASE 4x with both DMSO then 1X PBS, as well as after nanobody with 1X PBS then 0.01X PBS
+
+Nanobodies in 1X PBS overnight
+tracking dirac curves (dirac pt, etc), not time-series tests
+    Used 500 pts/V divisions for dirac tracking
+    Sweeps are 0 to 1V
+func started on 7/15/26, analyte tested on 7/16/26
+
+
+The analytes are tested in wells:
+(1): Nanobody-functionalized
+(2): Nanobody-functionalized
+(3): Bare graphene
+(4): NONE
+
+channels_to_omit = [5]
+
+
+
+The respective channels for each well are:
+(1): 8,9,12,13,14,15
+(2): 0,1,6,10,11
+(3): 2,3,4,5,7
+(4): NONE
+
+The following wells went bad: 5
+
+    TOP
+-----------
+| (1)|(2) |
+-----|----|
+| (4)|(3) | 
+-----------
+
+
+Volumes and concentrations used:
+functionalization:
+    PBASE 10mM in DMSO, 2 hours
+    2uM wild-type nanobody, overnight
+    (no DDT or ETA)
+analyte:
+    No hexapro
+    Measurements were taken every ~45 mins, to see how it changed with time
+    0.01X PBS blank incubated for 45 mins, then measurement taken (same solution), then replaced 0.01X PBS to incubate, then repeat
+
+
+Result:
+    It moved together mostly. It didn't move as much, "only" max ~15% compared to ~25% like drift seen in earlier experiments. this shows that we need more rigorous washing. It might be worth washing rigorously in between incubations as well. The PBS might be sitting too long and crystalizing / adsorbing on the graphene. 
+
+
+What could have gone wrong: (both from earlier)
+1) PBASE is not washed off enough
+2) PBASE's NHS ester is hydrolyzing 
+
+What to test next:
+Try washing rigorously after PBASE and nanobody again.
+Try washing in between analyte incubations
+Try ETA
+
+I want to run a drift test with 3 wells:
+    1) Bare graphene
+    2) PBASE + nano
+    3) PBASE + nano + ETA
+    [4) PBASE alone once I get the IC test socket adapter]
+

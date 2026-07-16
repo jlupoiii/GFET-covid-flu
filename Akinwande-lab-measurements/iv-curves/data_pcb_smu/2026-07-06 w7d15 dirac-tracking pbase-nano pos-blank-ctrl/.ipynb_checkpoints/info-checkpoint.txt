@@ -1,0 +1,62 @@
+Wafer 7 Device 15 - Nanobody test
+
+Using 0.01X PBS for analytes, PBASE linking, and NANOBODIES (wildtype) (first time!!!!). This has pos and blank ctrls () no negative control. Important to note that 
+    1) Used 0.01X PBS for the analytes (kept 1X PBS for functionalization)
+    2) Took dirac measurements with the analyte solution in the well; no washing before
+    3) 1X PBS used was purchased, NOT self-made wth tablets
+    4) used new PBASE opened this day, 7/6/26
+    5) Included PBASE dirac sweep
+
+Nanobodies in 1X PBS overnight
+tracking dirac curves (dirac pt, etc), not time-series tests
+    Used 500 pts/V divisions for dirac tracking
+    Sweeps are 0 to 1V
+func started on 7/6/26, analyte tested on 7/7/26
+
+
+The analytes are tested in wells:
+(1): Blank, 0.01X PBS
+(2): Pos ctrl, Hexapro
+(3): Pos ctrl, Hexapro
+(4): NONE
+
+channels_to_omit = [5]
+
+The respective channels for each well are:
+(1): 8,9,12,13,14,15
+(2): 0,1,6,10,11
+(3): 2,3,4,5,7
+(4): NONE
+
+The following wells went bad: 5
+
+    TOP
+-----------
+| (1)|(2) |
+-----|----|
+| (4)|(3) | 
+-----------
+
+
+Volumes and concentrations used:
+functionalization:
+    PBASE 10mM in DMSO, 2 hours
+    2uM wild-type nanobody, overnight
+    (no DDT or ETA)
+analyte:
+    Hexapro in 0.01X PBS
+    1aM, 100aM, 10fM, 1pM, 100pM, 10nM
+    Replaced solution at every concentration, 50uL in every well. Analyte NOT added cumulatively to the well. Add a conc, incubate, measure, take out soln, add next conc, ... repeat
+    Took measurements with the current concentration in the well
+
+
+The positive, negative, and 0.01X Blank controls all move together, so there is drift (because blank drifts too).
+
+What could have gone wrong: 
+1) PBASE is not washed off enough
+2) PBASE's NHS ester is hydrolyzing
+
+What to test next:
+Try a rigorous wash after PBS, for both DMSO and 1X PBS. Be quicker with PBASE to prevent NHS ester hydrolyzing. Try washing between analyte concs with 0.01X PBS. Do an intentional drift test. Try ETA (pH 8) to see if it fixes things.
+
+
