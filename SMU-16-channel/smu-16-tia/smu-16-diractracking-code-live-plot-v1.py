@@ -98,7 +98,7 @@ class LivePlotter(QtWidgets.QMainWindow):
         control.addWidget(self.gate_v_res_box)
 
         # PART OF DELAY CODE
-        # # Sweep delay 
+        # # Sweep delay
         # control.addWidget(QtWidgets.QLabel("Sweep Delay (ms)"))
         # self.sweep_delay_box = QtWidgets.QLineEdit("1")
         # self.sweep_delay_box.setFixedWidth(80)
@@ -330,7 +330,7 @@ class LivePlotter(QtWidgets.QMainWindow):
             #         self, "Input Error", "Sweep delay must be a number (ms)."
             #     )
             #     return
-        
+
             # if sweep_delay_ms < 0 or sweep_delay_ms > 1000:
             #     QtWidgets.QMessageBox.critical(
             #         self,
@@ -368,8 +368,9 @@ class LivePlotter(QtWidgets.QMainWindow):
             self.current_sweep_start_time = time.time()
 
             # Send start command
-            sweep_delay_ms = 0 # PART OF DELAT CODE - THIS IS TEMPORARY TO GET RID OF DEPENDENCIES
-            self.send_serial(f"start,{vmin},{vmax},{sweep_delay_ms},{gate_v_res}")
+            sweep_delay_ms = 0  # PART OF DELAT CODE - THIS IS TEMPORARY TO GET RID OF DEPENDENCIES
+            self.send_serial(
+                f"start,{vmin},{vmax},{sweep_delay_ms},{gate_v_res}")
             sweep_completed = False
 
             # -----------------------------
