@@ -145,8 +145,8 @@ void loop() {
   Serial.print(gate_voltage, 6);
 
 
- // delay between gate voltage sweeps, to let the new gate voltage settle    // PART OF DELAY CODE
- delay(sweep_delay_ms);                                                      // PART OF DELAY CODE
+//  // delay between gate voltage sweeps, to let the new gate voltage settle    // PART OF DELAY CODE
+//  delay(sweep_delay_ms);                                                      // PART OF DELAY CODE
 
   // Read all 16 mux channels
   for (int ch = 0; ch < num_channels_drain; ch++) {

@@ -52,7 +52,7 @@ analyte:
 
 
 Result:
-    It moved together mostly. It didn't move as much, "only" max ~15% compared to ~25% like drift seen in earlier experiments. this shows that we need more rigorous washing. It might be worth washing rigorously in between incubations as well. The PBS might be sitting too long and crystalizing / adsorbing on the graphene. 
+    It moved together mostly. It didn't move as much, "only" max ~15% compared to ~25% like drift seen in earlier experiments. this shows that we need more rigorous washing. It might be worth washing rigorously in between incubations as well. The PBS might be sitting too long and crystalizing / adsorbing on the graphene - I want to try mixing the solution right before taking the analyte measurement
 
 
 What could have gone wrong: (both from earlier)
@@ -63,6 +63,7 @@ What to test next:
 Try washing rigorously after PBASE and nanobody again.
 Try washing in between analyte incubations
 Try ETA
+Right before taking measurement, mix up the solution a few times with pipette tip. OR let incubate, mix, take out, then replace with same conc for measurement
 
 I want to run a drift test with 3 wells:
     1) Bare graphene

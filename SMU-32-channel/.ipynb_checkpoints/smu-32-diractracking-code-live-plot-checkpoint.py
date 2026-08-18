@@ -25,7 +25,7 @@ import ctypes
 # -----------------------------
 # SERIAL_PORT = "COM6"
 BAUD_RATE = 115200
-N_CHANNELS = 16
+N_CHANNELS = 32
 
 
 class LivePlotter(QtWidgets.QMainWindow):
@@ -80,6 +80,14 @@ class LivePlotter(QtWidgets.QMainWindow):
         control.addWidget(start_btn)
         control.addWidget(stop_btn)
 
+
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
+        control.addSpacing(5)
+        control.addWidget(line)
+        control.addSpacing(5)
+
         # Gate voltage range
         control.addWidget(QtWidgets.QLabel("Gate Voltage Range (V)"))
         gate_layout = QtWidgets.QHBoxLayout()
@@ -90,7 +98,9 @@ class LivePlotter(QtWidgets.QMainWindow):
         gate_layout.addWidget(self.vmin_box)
         gate_layout.addWidget(QtWidgets.QLabel("-"))
         gate_layout.addWidget(self.vmax_box)
+        gate_layout.addStretch()
         control.addLayout(gate_layout)
+
 
         # Gate Voltage resolution
         control.addWidget(QtWidgets.QLabel("Gate V. Resolution (pts/V)"))
@@ -105,19 +115,54 @@ class LivePlotter(QtWidgets.QMainWindow):
         self.sweep_delay_box.setFixedWidth(80)
         control.addWidget(self.sweep_delay_box)
 
+        
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
+        control.addSpacing(20)
+        control.addWidget(line)
+        control.addSpacing(20)
+
+
+        # for 16
+        # # Channel toggles
+        # control.addWidget(QtWidgets.QLabel("Toggle Channels"))
+        # self.channel_enabled = []
+        # for i in range(N_CHANNELS):
+        #     cb = QtWidgets.QCheckBox(f"Ch {i}")
+        #     cb.setChecked(True)
+        #     cb.stateChanged.connect(self.update_visibility)
+        #     self.channel_enabled.append(cb)
+        #     control.addWidget(cb)
+
+        # toggle_all = QtWidgets.QPushButton("Toggle All")
+        # toggle_all.clicked.connect(self.toggle_all)
+        # control.addWidget(toggle_all)
+        # for 16
+        
         # Channel toggles
         control.addWidget(QtWidgets.QLabel("Toggle Channels"))
+        channel_grid = QtWidgets.QGridLayout()
         self.channel_enabled = []
         for i in range(N_CHANNELS):
-            cb = QtWidgets.QCheckBox(f"Channel {i}")
+            cb = QtWidgets.QCheckBox(f"{i}") # (f"Ch {i}")
             cb.setChecked(True)
             cb.stateChanged.connect(self.update_visibility)
             self.channel_enabled.append(cb)
-            control.addWidget(cb)
-
+            row = i % 8      # 8 rows
+            col = i // 8     # 2 columns
+            channel_grid.addWidget(cb, row, col)
+        control.addLayout(channel_grid)
         toggle_all = QtWidgets.QPushButton("Toggle All")
         toggle_all.clicked.connect(self.toggle_all)
         control.addWidget(toggle_all)
+
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
+        control.addSpacing(20)
+        control.addWidget(line)
+        control.addSpacing(20)
 
         # Y limits
         control.addWidget(QtWidgets.QLabel("Y Limits (µA)"))
@@ -131,6 +176,7 @@ class LivePlotter(QtWidgets.QMainWindow):
         ylayout.addWidget(self.ymin_box)
         ylayout.addWidget(QtWidgets.QLabel("-"))
         ylayout.addWidget(self.ymax_box)
+        ylayout.addStretch()
         control.addLayout(ylayout)
 
         autoscale_btn = QtWidgets.QPushButton("Auto-scale")
@@ -150,6 +196,7 @@ class LivePlotter(QtWidgets.QMainWindow):
         self.plot.setLabel("left", "Drain Current (µA)")
         self.plot.setYRange(0, 25)
         self.plot.getAxis("bottom").enableAutoSIPrefix(False)
+        self.plot.showGrid(x=True, y=True)
         layout.addWidget(self.plot, 1)
 
         # =============================
@@ -168,7 +215,7 @@ class LivePlotter(QtWidgets.QMainWindow):
         self.legend_widget.setStyleSheet("background-color: black;")
         self.legend_panel = QtWidgets.QVBoxLayout(self.legend_widget)
         layout.addWidget(self.legend_widget, 0)
-        label = QtWidgets.QLabel("   Legend   ")
+        label = QtWidgets.QLabel("      Legend   ")
 
 
 
@@ -178,8 +225,9 @@ class LivePlotter(QtWidgets.QMainWindow):
             background-color: #f0f0f0;   /* light grey / almost white */
             color: black;
             border: 1px solid #888;
-            padding: 6px;
+            padding: 4px;
             font-weight: bold;
+            font-size: 7pt;
         }
         QPushButton:hover {
             background-color: #e0e0e0;
@@ -209,7 +257,7 @@ class LivePlotter(QtWidgets.QMainWindow):
 
         
         # RIGHT: Legend, resumed
-        label.setStyleSheet("color: white; font-weight: bold;")
+        label.setStyleSheet("color: white; font-weight: bold;")        
         self.legend_panel.addWidget(label)
 
         self.channel_colors = [pg.intColor(i, hues=N_CHANNELS) for i in range(N_CHANNELS)]
@@ -221,7 +269,12 @@ class LivePlotter(QtWidgets.QMainWindow):
             row_layout.setContentsMargins(0, 0, 0, 0)
 
             lbl = QtWidgets.QLabel(f"Ch {i}")
-            lbl.setStyleSheet(f"color: {self.channel_colors[i].name()}; font-weight: bold;")
+            # lbl.setStyleSheet(f"color: {self.channel_colors[i].name()}; font-weight: bold;")
+            lbl.setStyleSheet(
+                f"color: {self.channel_colors[i].name()};"
+                "font-weight: bold;"
+                "font-size: 7pt;"
+            )
             row_layout.addWidget(lbl)
 
             line = QtWidgets.QFrame()
@@ -759,9 +812,5 @@ if __name__ == "__main__":
     win = LivePlotter()
     win.show()
     sys.exit(app.exec_())
-
-
-
-
 
 

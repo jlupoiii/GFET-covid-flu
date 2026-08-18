@@ -1,0 +1,63 @@
+Wafer 8 Device 14 - Drift test, functionalized with pyrene-capped oligo
+
+This was
+
+Using 0.01X PBS for analytes, PBASE linking, and NANOBODIES (wildtype) (first time!!!!). This has pos and blank ctrls () no negative control. Important to note that 
+    1) NO HEXAPRO in any wells, this was strictly done with no analyte
+    1) Used 0.01X PBS for the analytes (kept 1X PBS for functionalization)
+    2) used new PBASE opened 7/6/26
+    3) Skipped PBASE dirac sweep
+    4) Rigorous washing was done, washed after PBASE 4x with both DMSO then 1X PBS, as well as after nanobody with 1X PBS then 0.01X PBS
+
+Nanobodies in 1X PBS overnight
+tracking dirac curves (dirac pt, etc), not time-series tests
+    Used 500 pts/V divisions for dirac tracking
+    Sweeps are 0 to 1V
+func started on 7/15/26, analyte tested on 7/16/26
+
+
+The analytes are tested in wells:
+(1): NONE
+(2): NONE
+(3): NONE
+(4): NONE
+
+
+
+The respective channels for each well are: (new 4-well setup!!)
+(1): 0,1,2,3
+(2): 4,5,6,7
+(3): 8,9,10,11
+(4): 12,13,14,15
+
+The following wells went bad: 5
+
+    TOP
+-----------
+| (1)|(2) |
+-----|----|
+| (4)|(3) | 
+-----------
+
+
+Volumes and concentrations used:
+functionalization:
+    Pyrene-capped oligo, 2mM overnight in ambient air on stir plate at 18 rpm
+analyte:
+    None, just tested fror stability
+
+
+
+Result:
+    It drifted a lot... I tried rinsing a lot too
+
+
+What could have gone wrong: (both from earlier)
+1) DNA is in pieces due to 50+ freeze-thaw cycles
+2) DNA contaminated from repeated use
+3) Pyrene is not binding to the graphene because it's too concentrated, hence why I tried 2uM instead of 10uM like previous
+4) Pyrene is not binding to the graphene because the DNA is getting tangled, hence why I tried the stir plate
+
+What I can try:
+1) Only run analyet tests about an hour of baseline measurements, 4 every 15 mins for example. Make sure it stabilizes in its entirety.
+2) Order more oligos and pyrene-capped oligos
