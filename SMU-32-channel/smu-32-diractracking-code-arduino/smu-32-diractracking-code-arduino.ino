@@ -150,7 +150,7 @@ const uint32_t ADC_CONVERSION_TIME_US = 5;
 // The LTC1867 needs acquisition time between conversions. 
 // This is not normally necessary at these relatively slow 
 // SMU measurement rates, but is left explicitly configurable.
-const uint32_t ADC_ACQUIRE_US = 2;
+const uint32_t ADC_ACQUIRE_US = 2; 
 
 
 // ================================================================
@@ -161,8 +161,8 @@ float gate_start_voltage = 0.0;
 float gate_end_voltage   = 1.0;
 
 //// settling delay time for both multiplexer and gate DAC
-const uint32_t MUX_SETTLE_US = 1000; // automatically delays this amount, no matter what!!
-const uint32_t GATE_SETTLE_MS = 10;
+const uint32_t MUX_SETTLE_US = 100; // automatically delays this amount, no matter what!!
+const uint32_t GATE_SETTLE_MS = 100;
 float sweep_delay_ms = 0.0; // additional delay on top of MUX_SETTLE_US
 
 int gate_voltage_res = 500;
@@ -347,31 +347,79 @@ uint8_t build_ltc1867_config(int channel)
 */
 
 
+//uint16_t read_ltc1867_channel(int channel)
+//{
+//  channel = constrain(channel, 0, 7);
+//  uint8_t config = build_ltc1867_config(channel); // make config set of numbers to set to device for speific channel measurement
+//
+//  // this is a mock measurement to establish pipeline:
+//  // Start conversion: LTC1867 starts conversion on rising edge of CS/CONV.
+//  digitalWrite(ADC_CS_PIN, LOW);      // set low to make sure it's low initially, bc conversion is done on rising edge of CS/CONV
+//  delayMicroseconds(ADC_ACQUIRE_US);  // delay before setting high
+//  digitalWrite(ADC_CS_PIN, HIGH);     // set high
+//  delayMicroseconds(ADC_CONVERSION_TIME_US);  // delay before next measurement
+//
+//
+//  /*
+//    Serial read.
+//    Pull CS low to enable serial interface.
+//    We clock 16 bits total.
+//    The first 7 bits transmitted on MOSI contain the LTC1867 configuration word.
+//    We left-align the 7-bit configuration into a 16-bit word:
+//      config bit 6 -> transmitted first
+//      ...
+//      config bit 0
+//    Remaining bits are zero
+//  */
+//  uint16_t config_word = ((uint16_t)config) << 9; // convert into 16-bits
+//
+//  SPI.beginTransaction(
+//    SPISettings(
+//      ADC_SPI_CLOCK_HZ,
+//      MSBFIRST,
+//      SPI_MODE0
+//    )
+//  );
+//  digitalWrite(ADC_CS_PIN, LOW); // set low because must start low
+//  uint16_t result = SPI.transfer16(config_word); // acquire digital 16-bit measurement
+//  digitalWrite(ADC_CS_PIN, HIGH); // set high
+//  SPI.endTransaction();
+//
+//  return result;
+//}
+//
+//
+//// ADC CODE -> VOLTAGE, converts 16-bit code into readable voltage
+//// LTC1867 unipolar 16-bit mode: code 0 = approx 0 V, code 65535 = approx full-scale voltage
+//float raw_to_voltage(uint16_t raw)
+//{
+//  return (
+//    ((float)raw / (float)ADC_MAX_CODE)
+//    * 2.4 // VREF
+//  );
+//}
+// ============================================================
+// READ LTC1867 CHANNEL
+// ============================================================
+
 uint16_t read_ltc1867_channel(int channel)
 {
   channel = constrain(channel, 0, 7);
-  uint8_t config = build_ltc1867_config(channel); // make config set of numbers to set to device for speific channel measurement
 
-  // this is a mock measurement to establish pipeline:
-  // Start conversion: LTC1867 starts conversion on rising edge of CS/CONV.
-  digitalWrite(ADC_CS_PIN, LOW);      // set low to make sure it's low initially, bc conversion is done on rising edge of CS/CONV
-  delayMicroseconds(ADC_ACQUIRE_US);  // delay before setting high
-  digitalWrite(ADC_CS_PIN, HIGH);     // set high
-  delayMicroseconds(ADC_CONVERSION_TIME_US);  // delay before next measurement
+  uint8_t config = build_ltc1867_config(channel);
 
+  uint16_t result;
 
-  /*
-    Serial read.
-    Pull CS low to enable serial interface.
-    We clock 16 bits total.
-    The first 7 bits transmitted on MOSI contain the LTC1867 configuration word.
-    We left-align the 7-bit configuration into a 16-bit word:
-      config bit 6 -> transmitted first
-      ...
-      config bit 0
-    Remaining bits are zero
-  */
-  uint16_t config_word = ((uint16_t)config) << 9; // convert into 16-bits
+  // ----------------------------------------------------------
+  // The previous conversion has already completed.
+  //
+  // CS/CONV is LOW here, which enables the serial interface.
+  //
+  // During these 16 clocks:
+  //
+  //   MOSI -> configuration for the NEXT conversion
+  //   MISO -> result of the PREVIOUS conversion
+  // ----------------------------------------------------------
 
   SPI.beginTransaction(
     SPISettings(
@@ -380,23 +428,79 @@ uint16_t read_ltc1867_channel(int channel)
       SPI_MODE0
     )
   );
-  digitalWrite(ADC_CS_PIN, LOW); // set low because must start low
-  uint16_t result = SPI.transfer16(config_word); // acquire digital 16-bit measurement
-  digitalWrite(ADC_CS_PIN, HIGH); // set high
+
+  // LTC1867L configuration is 7 bits.
+  //
+  // Shift left by one so:
+  //
+  // bit 6 -> first transmitted bit
+  // ...
+  // bit 0 -> seventh transmitted bit
+  //
+  // Final bit is don't-care.
+  uint8_t config_byte = config << 1;
+
+  digitalWrite(ADC_CS_PIN, LOW);
+
+  // First 8 clocks:
+  //   send configuration
+  //   receive upper 8 bits of previous conversion
+  uint8_t high_byte = SPI.transfer(config_byte);
+
+  // Second 8 clocks:
+  //   receive lower 8 bits
+  uint8_t low_byte = SPI.transfer(0x00);
+
+  result =
+      ((uint16_t)high_byte << 8) |
+      low_byte;
+
+  // ----------------------------------------------------------
+  // Rising edge starts the NEXT conversion.
+  // ----------------------------------------------------------
+
+  digitalWrite(ADC_CS_PIN, HIGH);
+
   SPI.endTransaction();
+
+  // ----------------------------------------------------------
+  // Wait for the conversion to finish before the next read.
+  //
+  // Use your existing conversion-time constant if it is
+  // >= the LTC1867L maximum conversion time.
+  // ----------------------------------------------------------
+
+  delayMicroseconds(ADC_CONVERSION_TIME_US);
 
   return result;
 }
 
 
-// ADC CODE -> VOLTAGE, converts 16-bit code into readable voltage
-// LTC1867 unipolar 16-bit mode: code 0 = approx 0 V, code 65535 = approx full-scale voltage
+// ============================================================
+// ADC CODE -> VOLTAGE
+// ============================================================
+//
+// External VREF = 1.2 V.
+//
+// LTC1867L unipolar input range:
+//     0 V -> 2 * VREF
+//
+// Therefore:
+//     full scale = 2.4 V
+//
+// Code 0     -> ~0 V
+// Code 32768 -> ~1.2 V
+// Code 65535 -> ~2.4 V
+//
+// ============================================================
+
 float raw_to_voltage(uint16_t raw)
 {
-  return (
-    ((float)raw / (float)ADC_MAX_CODE)
-    * VREF
-  );
+  const float ADC_FULL_SCALE_VOLTAGE = 2.0f * VREF;
+
+  return
+      ((float)raw / 65536.0f)
+      * ADC_FULL_SCALE_VOLTAGE;
 }
 
 
@@ -411,22 +515,24 @@ float voltage_to_current(float voltage)
 }
 
 
-// INITIALIZE LTC1867, because first conversion after power-up can be invalid
-/*
-  Initialize the LTC1867 conversion pipeline.
-  The datasheet specifies that after power-up, the first
-  conversion can be invalid.
-  We perform dummy reads to establish the ADC state.
-*/
 
-void initialize_ltc1867()
+
+void init_ltc1867()
 {
-  digitalWrite(ADC_CS_PIN, LOW);
-  delayMicroseconds(ADC_ACQUIRE_US);
-  digitalWrite(ADC_CS_PIN, HIGH); // Rising edge starts first dummy conversion.
+  pinMode(ADC_CS_PIN, OUTPUT);
+
+  // Start with CS/CONV HIGH
+  digitalWrite(ADC_CS_PIN, HIGH);
+
+  // Start the first conversion
+  digitalWrite(ADC_CS_PIN, HIGH);
+
   delayMicroseconds(ADC_CONVERSION_TIME_US);
 
-  // Read/discard first conversion and configure CH0.
+  // Enable serial interface
+  digitalWrite(ADC_CS_PIN, LOW);
+
+  // Read/discard first conversion while loading CH0 config
   SPI.beginTransaction(
     SPISettings(
       ADC_SPI_CLOCK_HZ,
@@ -434,17 +540,55 @@ void initialize_ltc1867()
       SPI_MODE0
     )
   );
-  digitalWrite(ADC_CS_PIN, LOW);
-  SPI.transfer16(
-    ((uint16_t)build_ltc1867_config(0)) << 9
-  );
-  digitalWrite(ADC_CS_PIN, HIGH);
+
+  uint8_t config_byte = build_ltc1867_config(0) << 1;
+
+  SPI.transfer(config_byte);
+  SPI.transfer(0x00);
+
   SPI.endTransaction();
 
+  // Start next conversion
+  digitalWrite(ADC_CS_PIN, HIGH);
 
-  // Second dummy conversion to establish CH0.
-  read_ltc1867_channel(0);
+  delayMicroseconds(ADC_CONVERSION_TIME_US);
 }
+
+
+// INITIALIZE LTC1867, because first conversion after power-up can be invalid
+/*
+  Initialize the LTC1867 conversion pipeline.
+  The datasheet specifies that after power-up, the first
+  conversion can be invalid.
+  We perform dummy reads to establish the ADC state.
+*/
+//
+//void initialize_ltc1867()
+//{
+//  digitalWrite(ADC_CS_PIN, LOW);
+//  delayMicroseconds(ADC_ACQUIRE_US);
+//  digitalWrite(ADC_CS_PIN, HIGH); // Rising edge starts first dummy conversion.
+//  delayMicroseconds(ADC_CONVERSION_TIME_US);
+//
+//  // Read/discard first conversion and configure CH0.
+//  SPI.beginTransaction(
+//    SPISettings(
+//      ADC_SPI_CLOCK_HZ,
+//      MSBFIRST,
+//      SPI_MODE0
+//    )
+//  );
+//  digitalWrite(ADC_CS_PIN, LOW);
+//  SPI.transfer16(
+//    ((uint16_t)build_ltc1867_config(0)) << 9
+//  );
+//  digitalWrite(ADC_CS_PIN, HIGH);
+//  SPI.endTransaction();
+//
+//
+//  // Second dummy conversion to establish CH0.
+//  read_ltc1867_channel(0);
+//}
 
 
 // MEASURE ALL 32 CHANNELS, function
@@ -661,7 +805,8 @@ void setup()
   digitalWrite(ADC_CS_PIN, HIGH); // Keep CS/CONV high when idle.
   SPI.begin(); // Initialize hardware SPI.
   // Initialize LTC1867.
-  initialize_ltc1867();
+//  initialize_ltc1867();
+  init_ltc1867();
 
 
   // Initialize current list/array
@@ -697,7 +842,7 @@ void loop()
         run_started = false;
         step_number = 0;
 
-        Serial.println("STARTED");
+//        Serial.println("STARTED");
       }
       else
       {

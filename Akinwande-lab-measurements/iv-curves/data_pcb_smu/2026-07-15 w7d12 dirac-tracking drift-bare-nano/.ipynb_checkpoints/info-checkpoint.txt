@@ -1,5 +1,7 @@
 Wafer 7 Device 12 - Drift test, nanobody vs bare graphene
 
+The nanobody is not immobilized, so no duh it didn't work
+
 Using 0.01X PBS for analytes, PBASE linking, and NANOBODIES (wildtype) (first time!!!!). This has pos and blank ctrls () no negative control. Important to note that 
     1) NO HEXAPRO in any wells, this was strictly done with no analyte
     1) Used 0.01X PBS for the analytes (kept 1X PBS for functionalization)

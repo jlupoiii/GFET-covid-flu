@@ -438,9 +438,26 @@ class LivePlotter(QtWidgets.QMainWindow):
             # Blocking read loop
             # -----------------------------
             while self.sweep_running:
+
+                # ##############################################
+                # FOR DEBUGGING
+                # ##############################################
+                line_bytes = self.ser.readline()
+                if not line_bytes:
+                    print("TIMEOUT: No response received from Teensy")
+                    return
+                try:
+                    line = line_bytes.decode(errors='replace').strip()
+                    # print(f"Received: {repr(line)}")
+                except Exception as e:
+                    print(f"Serial decode error: {e}")
+                    return
+                # ##############################################
+
+                
                 line = self.ser.readline().decode().strip()
                 if not line:
-                    print('Serial info not complete, received', line)
+                    print('Serial line not complete, received', line)
                     continue
     
                 if line == "DONE":
@@ -448,9 +465,9 @@ class LivePlotter(QtWidgets.QMainWindow):
                     break
     
                 parts = line.split(",")
-                if len(parts) != 19:
+                if len(parts) != 35:
                     # sweep_completed = True
-                    print('Serial info not complete, received', line)
+                    print(f'Serial info not complete, received {len(parts)}-long line:', line)
                     continue
     
                 step = int(parts[0])
@@ -609,7 +626,6 @@ class LivePlotter(QtWidgets.QMainWindow):
         try:
             port = None
             for p in list_ports.comports():
-                print(p)
                 if p.vid == 0x16C0:  # Teensy
                     port = p.device
                     break
